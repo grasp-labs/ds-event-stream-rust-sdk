@@ -8,7 +8,7 @@
 //!
 //! ### Example
 //! ```no_run
-//! use ds_event_stream_rust_sdk::utils::list_topics;
+//! use ds_event_stream_rust_sdk::utils::{list_topics, get_topic};
 //!
 //! let topic = get_topic("bootstrap_servers", "username", "password", "topic_name");
 //! let topics = list_topics("bootstrap_servers", "username", "password");

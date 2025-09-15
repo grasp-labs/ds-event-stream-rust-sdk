@@ -14,12 +14,35 @@
 //!
 //! ### Example
 //! ```no_run
-//! use ds_event_stream_rust_sdk::{KafkaProducer};
+//! use ds_event_stream_rust_sdk::producer::KafkaProducer;
+//! use ds_event_stream_rust_sdk::model::EventStream;
+//! use uuid::Uuid;
+//! use chrono::Utc;
 //!
 //! #[tokio::main]
-//! async fn main() -> anyhow::Result<()> {
-//!     let producer = KafkaProducer::new()?;
-//!     let payload  = EventStream { message: "hello" };
+//! async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     let producer = KafkaProducer::new("username", "password")?;
+//!     let payload = EventStream {
+//!         id: Uuid::new_v4(),
+//!         session_id: Uuid::new_v4(),
+//!         tenant_id: Uuid::new_v4(),
+//!         event_source: "test".to_string(),
+//!         event_type: "test".to_string(),
+//!         timestamp: Utc::now(),
+//!         created_by: "test".to_string(),
+//!         md5_hash: "test".to_string(),
+//!         request_id: None,
+//!         owner_id: None,
+//!         product_id: None,
+//!         product_schema_uri: None,
+//!         event_source_uri: None,
+//!         affected_entity_uri: None,
+//!         message: Some("hello".to_string()),
+//!         body: None,
+//!         body_uri: None,
+//!         metadata: None,
+//!         tags: None,
+//!     };
 //!     producer.send_message("user-created", "user-42", &payload).await?;
 //!     Ok(())
 //! }

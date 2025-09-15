@@ -13,8 +13,10 @@
 //!
 //! ### Example
 //! ```no_run
-//! use ds_event_stream_rust_sdk::{KafkaConsumer};
+//! use ds_event_stream_rust_sdk::consumer::KafkaConsumer;
 //! use tokio_stream::StreamExt;
+//! use tracing::{info, error};
+//! use rdkafka::message::Message;
 //!
 //! #[tokio::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {

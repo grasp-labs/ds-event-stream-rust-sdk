@@ -142,8 +142,13 @@ impl KafkaProducer {
         let record = FutureRecord::to(topic).payload(&payload_json).key(key);
 
         match self.inner.send(record, self.timeout).await {
-            Ok((partition, offset)) => {
-                info!(partition, offset, "message produced to topic: {}", topic);
+            Ok(delivery) => {
+                info!(
+                    partition = delivery.partition,
+                    offset = delivery.offset,
+                    "message produced to topic: {}",
+                    topic
+                );
                 Ok(())
             }
             Err((err, _msg)) => {

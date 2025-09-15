@@ -23,7 +23,7 @@ serde_path_to_error = "0.1"
 tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros", "test-util"], optional = true }
 tokio-stream = { version = "0.1.17", optional = true }
 
-rdkafka = { version = "0.37.0", features = ["cmake-build", "tokio", "sasl"] }
+rdkafka = { version = "0.38.0", features = ["cmake-build", "tokio", "sasl"] }
 
 [features]
 default = ["tokio"]

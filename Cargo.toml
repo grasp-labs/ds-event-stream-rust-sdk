@@ -2,7 +2,7 @@
 name = "ds-event-stream-rust-sdk"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.61.0"
+rust-version = "1.76.0"
 description = "DS Event Stream SDK"
 readme = "README.md"
 license = "MIT OR Apache-2.0"
@@ -15,14 +15,16 @@ thiserror = "2.0.16"
 chrono = { version = "0.4.41", features = ["serde"] }
 
 tracing = "0.1"
-tracing-error = "0.2.1"
-tracing-subscriber = { version = "0.3", features = ["fmt", "json", "env-filter"] }
 
 serde = { version = "1.0.224", features = ["derive"] }
 serde_json = "1.0"
 serde_path_to_error = "0.1"
 
-tokio = { version = "1", features = ["full"] }
-tokio-stream = { version = "0.1.17" }
+tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros", "test-util"], optional = true }
+tokio-stream = { version = "0.1.17", optional = true }
 
-rdkafka = { version = "0.37.0", features = ["cmake-build", "tokio"] }
+rdkafka = { version = "0.37.0", features = ["cmake-build", "tokio", "sasl"] }
+
+[features]
+default = ["tokio"]
+tokio = ["dep:tokio", "dep:tokio-stream"]

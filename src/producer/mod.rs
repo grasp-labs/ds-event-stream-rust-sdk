@@ -59,6 +59,8 @@ use tracing::{error, info};
 use crate::error::ProducerError;
 use crate::model::v1::EventStream;
 
+// region: --> KafkaProducer
+
 /// Wrapper around an [`rdkafka::producer::FutureProducer`].
 ///
 /// The producer is configured once and can then be cheaply cloned thanks to
@@ -98,7 +100,16 @@ impl KafkaProducer {
                 "message.timeout.ms",
                 Self::DEFAULT_SEND_TIMEOUT_MS.to_string(),
             )
-            .set("security.protocol", "SASL_SSL")
+            .set("session.timeout.ms", "6000")
+            .set("acks", "all")
+            .set("retries", "3")
+            .set("compression.type", "snappy")
+            .set("batch.size", "16384")
+            .set("linger.ms", "5")
+            .set("max.in.flight.requests.per.connection", "5")
+            .set("request.timeout.ms", "30000")
+            .set("delivery.timeout.ms", "120000")
+            .set("security.protocol", "SASL_PLAINTEXT")
             .set("sasl.mechanisms", "SCRAM-SHA-512")
             .set("sasl.username", username)
             .set("sasl.password", password)
@@ -142,3 +153,57 @@ impl KafkaProducer {
         }
     }
 }
+
+// endregion: --> KafkaProducer
+
+// region: --> Tests
+
+#[cfg(test)]
+mod tests {
+    use crate::error::ProducerError;
+
+    use super::*;
+
+    #[test]
+    fn test_producer_new() {
+        std::env::set_var("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092");
+        let producer = KafkaProducer::new("username", "password").unwrap();
+        assert_eq!(producer.timeout.as_millis(), 5000);
+    }
+
+    #[test]
+    fn test_producer_missing_bootstrap_servers() {
+        // Ensure the env var is definitely not set
+        std::env::remove_var("KAFKA_BOOTSTRAP_SERVERS");
+        let result = KafkaProducer::new("username", "password");
+        assert!(matches!(result, Err(ProducerError::MissingEnvVar { .. })));
+        // Clean up after test
+        std::env::set_var("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092");
+    }
+
+    #[test]
+    fn test_producer_empty_credentials() {
+        std::env::set_var("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092");
+        // Empty credentials should fail because rdkafka validates SASL credentials
+        let result = KafkaProducer::new("", "");
+        assert!(matches!(result, Err(ProducerError::Kafka(_))));
+    }
+
+    #[test]
+    fn test_producer_timeout_configuration() {
+        std::env::set_var("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092");
+        let producer = KafkaProducer::new("username", "password").unwrap();
+        assert_eq!(producer.timeout.as_millis(), 5000);
+        assert_eq!(producer.timeout.as_secs(), 5);
+    }
+
+    #[test]
+    fn test_producer_clone() {
+        std::env::set_var("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092");
+        let producer1 = KafkaProducer::new("username", "password").unwrap();
+        let producer2 = producer1.clone();
+        assert_eq!(producer1.timeout, producer2.timeout);
+    }
+}
+
+// endregion: --> Tests

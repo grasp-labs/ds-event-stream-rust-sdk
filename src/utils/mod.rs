@@ -19,7 +19,6 @@ use rdkafka::config::ClientConfig;
 
 use tracing::debug;
 
-
 /// Get metadata for a specific topic.
 ///
 /// # Arguments
@@ -32,7 +31,12 @@ use tracing::debug;
 /// # Returns
 ///
 /// * `Option<String>` - The topic name if found, None otherwise.
-pub fn get_topic(bootstrap_servers: &str, username: &str, password: &str, topic_name: &str) -> Option<String> {
+pub fn get_topic(
+    bootstrap_servers: &str,
+    username: &str,
+    password: &str,
+    topic_name: &str,
+) -> Option<String> {
     debug!("Getting topic metadata for topic: {}", topic_name);
     let admin: AdminClient<DefaultClientContext> = ClientConfig::new()
         .set("bootstrap.servers", bootstrap_servers)
@@ -49,11 +53,12 @@ pub fn get_topic(bootstrap_servers: &str, username: &str, password: &str, topic_
         .fetch_metadata(Some(topic_name), std::time::Duration::from_secs(10))
         .expect("Failed to fetch metadata");
 
-    metadata.topics().iter()
+    metadata
+        .topics()
+        .iter()
         .find(|topic| topic.name() == topic_name)
         .map(|topic| topic.name().to_string())
 }
-
 
 /// Get the topics for the DS Event Stream.
 ///
@@ -83,5 +88,9 @@ pub fn list_topics(bootstrap_servers: &str, username: &str, password: &str) -> V
         .fetch_metadata(None, std::time::Duration::from_secs(10))
         .expect("Failed to fetch metadata");
 
-    metadata.topics().iter().map(|topic| topic.name().to_string()).collect()
+    metadata
+        .topics()
+        .iter()
+        .map(|topic| topic.name().to_string())
+        .collect()
 }

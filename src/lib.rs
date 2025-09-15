@@ -7,9 +7,9 @@ mod error;
 
 #[cfg(test)]
 mod tests {
-    use chrono:: Utc;
-    use uuid::Uuid;
     use crate::model::v1::EventStream;
+    use chrono::Utc;
+    use uuid::Uuid;
 
     #[test]
     fn check_message_serialization() {

@@ -63,10 +63,7 @@ impl KafkaProducer {
     /// * [`ProducerError::MissingEnvVar`]   if the env var is not set.
     /// * [`ProducerError::Kafka`]            if the underlying `rdkafka`
     ///   producer fails to initialise (rare — usually wrong config).
-    pub fn new(
-        username: &str,
-        password: &str,
-    ) -> Result<Self, ProducerError> {
+    pub fn new(username: &str, password: &str) -> Result<Self, ProducerError> {
         let bootstrap =
             env::var("KAFKA_BOOTSTRAP_SERVERS").map_err(|_| ProducerError::MissingEnvVar {
                 var_name: "KAFKA_BOOTSTRAP_SERVERS".to_string(),

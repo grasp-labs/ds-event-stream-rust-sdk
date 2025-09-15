@@ -104,11 +104,7 @@ impl KafkaConsumer {
     /// # Returns
     ///
     /// * `Result<Self, ConsumerError>` - The result of the operation
-    pub fn new(
-        topics: &[&str],
-        username: &str,
-        password: &str,
-    ) -> Result<Self, ConsumerError> {
+    pub fn new(topics: &[&str], username: &str, password: &str) -> Result<Self, ConsumerError> {
         let brokers =
             env::var("KAFKA_BOOTSTRAP_SERVERS").map_err(|_| ConsumerError::MissingEnvVar {
                 var_name: "KAFKA_BOOTSTRAP_SERVERS".to_string(),

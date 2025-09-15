@@ -1,6 +1,28 @@
 [package]
 name = "ds-event-stream-rust-sdk"
 version = "0.1.0"
-edition = "2024"
+edition = "2021"
+rust-version = "1.61.0"
+description = "DS Event Stream SDK"
+readme = "README.md"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/your-org/your-crate"
+documentation = "https://docs.rs/ds-event-s"
 
 [dependencies]
+uuid = { version = "1.8", features = ["v4", "serde"] }
+thiserror = "2.0.16"
+chrono = { version = "0.4.41", features = ["serde"] }
+
+tracing = "0.1"
+tracing-error = "0.2.1"
+tracing-subscriber = { version = "0.3", features = ["fmt", "json", "env-filter"] }
+
+serde = { version = "1.0.224", features = ["derive"] }
+serde_json = "1.0"
+serde_path_to_error = "0.1"
+
+tokio = { version = "1", features = ["full"] }
+tokio-stream = { version = "0.1.17" }
+
+rdkafka = { version = "0.37.0", features = ["cmake-build", "tokio"] }

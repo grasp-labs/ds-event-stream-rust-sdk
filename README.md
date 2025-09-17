@@ -2,7 +2,7 @@
 
 [![Crates.io version](https://img.shields.io/crates/v/ds-event-stream-rust-sdk.svg)](https://crates.io/crates/ds-event-stream-rust-sdk)
 [![License: MIT OR Apache-2.0](https://img.shields.io/badge/License-MIT%20OR%20Apache--2.0-blue.svg)](https://opensource.org/licenses/MIT)
-[![Rust](https://img.shields.io/badge/rust-1.61%2B-blue.svg)](https://www.rust-lang.org)
+[![Rust](https://img.shields.io/badge/rust-1.76%2B-blue.svg)](https://www.rust-lang.org)
 
 A Rust SDK for interacting with the DS Event Stream via Kafka. This library provides a clean, async interface for producing and consuming events from the DS Event Stream.
 
@@ -103,7 +103,6 @@ The SDK uses the following environment variables:
 
 - `KAFKA_BOOTSTRAP_SERVERS` - Kafka broker addresses (required)
 - `KAFKA_CONSUMER_GROUP` - Consumer group ID (required for consumers)
-- `LOG_FORMAT` - Set to "json" for JSON logging (optional)
 
 ## License
 

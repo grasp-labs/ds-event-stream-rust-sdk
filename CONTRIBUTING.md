@@ -22,7 +22,7 @@ Thank you for your interest in contributing to the DS Event Stream Rust SDK! Thi
 
 ### Prerequisites
 
-- Rust 1.61.0 or later
+- Rust 1.76.0 or later
 - A Kafka instance for testing (local or remote)
 
 ### Building

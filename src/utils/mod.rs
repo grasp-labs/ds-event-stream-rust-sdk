@@ -33,12 +33,7 @@ use tracing::debug;
 /// # Returns
 ///
 /// * `Option<String>` - The topic name if found, None otherwise.
-pub fn get_topic(
-    bootstrap_servers: &str,
-    username: &str,
-    password: &str,
-    topic_name: &str,
-) -> Option<String> {
+pub fn get_topic(bootstrap_servers: &str, username: &str, password: &str, topic_name: &str) -> Option<String> {
     debug!("Getting topic metadata for topic: {}", topic_name);
     let admin: AdminClient<DefaultClientContext> = ClientConfig::new()
         .set("bootstrap.servers", bootstrap_servers)
@@ -96,11 +91,7 @@ pub fn list_topics(bootstrap_servers: &str, username: &str, password: &str) -> V
         .fetch_metadata(None, std::time::Duration::from_secs(10))
         .expect("Failed to fetch metadata");
 
-    metadata
-        .topics()
-        .iter()
-        .map(|topic| topic.name().to_string())
-        .collect()
+    metadata.topics().iter().map(|topic| topic.name().to_string()).collect()
 }
 
 // endregion: --> Utils

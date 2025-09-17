@@ -89,10 +89,9 @@ impl KafkaProducer {
     /// * [`ProducerError::Kafka`]            if the underlying `rdkafka`
     ///   producer fails to initialise (rare — usually wrong config).
     pub fn new(username: &str, password: &str) -> Result<Self, ProducerError> {
-        let bootstrap =
-            env::var("KAFKA_BOOTSTRAP_SERVERS").map_err(|_| ProducerError::MissingEnvVar {
-                var_name: "KAFKA_BOOTSTRAP_SERVERS".to_string(),
-            })?;
+        let bootstrap = env::var("KAFKA_BOOTSTRAP_SERVERS").map_err(|_| ProducerError::MissingEnvVar {
+            var_name: "KAFKA_BOOTSTRAP_SERVERS".to_string(),
+        })?;
 
         let inner: FutureProducer = ClientConfig::new()
             .set("bootstrap.servers", &bootstrap)
@@ -125,18 +124,11 @@ impl KafkaProducer {
     ///
     /// The function is instrumented with [`tracing`]; any error bubbles up as
     /// [`ProducerError`].
-    pub async fn send_message(
-        &self,
-        topic: &Topic,
-        key: &str,
-        payload: &EventStream,
-    ) -> Result<(), ProducerError> {
+    pub async fn send_message(&self, topic: &Topic, key: &str, payload: &EventStream) -> Result<(), ProducerError> {
         let topic_name = topic.name();
         let payload_json = serde_json::to_string(payload).map_err(ProducerError::Json)?;
 
-        let record = FutureRecord::to(&topic_name)
-            .payload(&payload_json)
-            .key(key);
+        let record = FutureRecord::to(&topic_name).payload(&payload_json).key(key);
         match self.inner.send(record, Duration::from_millis(5000)).await {
             Ok(delivery) => {
                 info!(

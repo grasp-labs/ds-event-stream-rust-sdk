@@ -3,11 +3,13 @@ name = "ds-event-stream-rust-sdk"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.76.0"
-description = "DS Event Stream SDK"
+description = "A comprehensive Rust SDK for working with the DS Event Stream, providing high-level abstractions for producing and consuming events from Kafka"
 readme = "README.md"
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/your-org/your-crate"
-documentation = "https://docs.rs/ds-event-s"
+repository = "https://github.com/grasp-labs/ds-event-stream-rust-sdk"
+documentation = "https://docs.rs/ds-event-stream-rust-sdk"
+keywords = ["kafka", "event-stream", "sdk", "messaging", "async"]
+categories = ["asynchronous", "network-programming", "web-programming"]
 
 [dependencies]
 uuid = { version = "1.8", features = ["v4", "serde"] }
@@ -20,14 +22,9 @@ serde = { version = "1.0.224", features = ["derive"] }
 serde_json = "1.0"
 serde_path_to_error = "0.1"
 
-tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros", "test-util"], optional = true }
-tokio-stream = { version = "0.1.17", optional = true }
-
-rdkafka = { version = "0.38.0", features = ["cmake-build", "tokio", "sasl"] }
+rdkafka = { version = "0.38.0", features = ["cmake-build", "sasl", "tokio"] }
+tokio-stream = { version = "0.1.17" }
 
 [dev-dependencies]
 dotenv = "0.15"
-
-[features]
-default = ["tokio"]
-tokio = ["dep:tokio", "dep:tokio-stream"]
+tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros", "test-util"] }

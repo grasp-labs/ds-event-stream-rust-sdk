@@ -2,7 +2,6 @@ use chrono::Utc;
 use ds_event_stream_rust_sdk::model::EventStream;
 use uuid::Uuid;
 
-#[cfg(feature = "tokio")]
 #[tokio::test]
 async fn test_consumer_serialize_deserialize() {
     // Test serialization without creating actual consumer

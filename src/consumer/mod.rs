@@ -171,7 +171,6 @@ impl KafkaConsumer {
     /// # Returns
     ///
     /// * `impl Stream<Item = KafkaResult<BorrowedMessage<'_>>> + '_` - The stream of messages
-    #[cfg(feature = "tokio")]
     pub fn stream(&self) -> impl tokio_stream::Stream<Item = rdkafka::error::KafkaResult<BorrowedMessage<'_>>> + '_ {
         self.inner.stream()
     }

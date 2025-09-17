@@ -15,10 +15,10 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
 
-      - name: Install SASL dependencies
+      - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libsasl2-dev
+          sudo apt-get install -y libsasl2-dev libssl-dev pkg-config
 
       - name: Format check
         run: cargo fmt --all -- --check

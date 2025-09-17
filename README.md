@@ -36,13 +36,30 @@ cargo add ds-event-stream-rust-sdk
 ```rust
 use ds_event_stream_rust_sdk::{KafkaProducer, EventStream};
 use tracing::info;
+use uuid::Uuid;
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let producer = KafkaProducer::new("username", "password")?;
     let event = EventStream::new(
-        session_id,
-        tenant_id,
-        Some(serde_json::json!({"pipeline_id": "pipeline-123"}))
+        Uuid::new_v4(), // session_id
+        Uuid::new_v4(), // tenant_id
+        "pipeline-service".to_string(), // event_source
+        "pipeline-created".to_string(), // event_type
+        "user-42".to_string(), // created_by
+        None, // request_id
+        None, // owner_id
+        None, // product_id
+        None, // product_schema_uri
+        None, // event_source_uri
+        None, // affected_entity_uri
+        None, // message
+        Some(serde_json::json!({"pipeline_id": "pipeline-123"})), // payload
+        None, // payload_uri
+        None, // context
+        None, // context_uri
+        None, // metadata
+        None, // tags
     );
     producer.send_message("user-created", "user-42", &event).await?;
     info!("Event sent to Kafka");

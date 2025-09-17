@@ -25,6 +25,9 @@ tokio-stream = { version = "0.1.17", optional = true }
 
 rdkafka = { version = "0.38.0", features = ["cmake-build", "tokio", "sasl"] }
 
+[dev-dependencies]
+dotenv = "0.15"
+
 [features]
 default = ["tokio"]
 tokio = ["dep:tokio", "dep:tokio-stream"]

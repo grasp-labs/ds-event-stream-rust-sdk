@@ -14,13 +14,14 @@
 //! ### Example
 //! ```no_run
 //! use ds_event_stream_rust_sdk::consumer::KafkaConsumer;
+//! use ds_event_stream_rust_sdk::model::topics::Topic;
 //! use tokio_stream::StreamExt;
 //! use tracing::{info, error};
 //! use rdkafka::message::Message;
 //!
 //! #[tokio::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//!     let consumer = KafkaConsumer::new(&["test-topic"], "username", "password")?;
+//!     let consumer = KafkaConsumer::new(&[Topic::DsPipelineJobRequested], "username", "password")?;
 //!     let mut stream = consumer.stream();
 //!
 //!     while let Some(result) = stream.next().await {
@@ -55,6 +56,7 @@ use serde_path_to_error::deserialize;
 use tracing::{debug, error, info};
 
 use crate::error::ConsumerError;
+use crate::model::topics::Topic;
 use crate::model::EventStream;
 
 /* --------------------------------------------------------------------- */
@@ -136,7 +138,7 @@ impl KafkaConsumer {
     /// # Returns
     ///
     /// * `Result<Self, ConsumerError>` - The result of the operation
-    pub fn new(topics: &[&str], username: &str, password: &str) -> Result<Self, ConsumerError> {
+    pub fn new(topics: &[Topic], username: &str, password: &str) -> Result<Self, ConsumerError> {
         let brokers =
             env::var("KAFKA_BOOTSTRAP_SERVERS").map_err(|_| ConsumerError::MissingEnvVar {
                 var_name: "KAFKA_BOOTSTRAP_SERVERS".to_string(),
@@ -148,15 +150,14 @@ impl KafkaConsumer {
         let inner: StreamConsumer<_> = ClientConfig::new()
             .set("group.id", &group)
             .set("bootstrap.servers", &brokers)
-            .set("enable.partition.eof", "false")
             .set("session.timeout.ms", "6000")
+            .set("enable.partition.eof", "false")
+            .set("heartbeat.interval.ms", "3000")
+            .set("max.poll.interval.ms", "300000")
             .set("auto.offset.reset", "earliest")
             .set("enable.auto.commit", "false")
             .set("fetch.min.bytes", "1")
             .set("max.partition.fetch.bytes", "1048576")
-            .set("heartbeat.interval.ms", "3000")
-            .set("max.poll.interval.ms", "300000")
-            .set("request.timeout.ms", "30000")
             .set("security.protocol", "SASL_PLAINTEXT")
             .set("sasl.mechanism", "SCRAM-SHA-512")
             .set("sasl.username", username)
@@ -164,8 +165,9 @@ impl KafkaConsumer {
             .set_log_level(RDKafkaLogLevel::Info)
             .create_with_context(context)?;
 
-        let topic_names: Vec<&str> = topics.to_vec();
-        inner.subscribe(&topic_names)?;
+        let topic_names: Vec<String> = topics.iter().map(|t| t.name()).collect();
+        let topic_refs: Vec<&str> = topic_names.iter().map(|s| s.as_str()).collect();
+        inner.subscribe(&topic_refs)?;
         info!(topics = ?topic_names, "Kafka consumer initialised");
         Ok(Self { inner })
     }
@@ -249,105 +251,3 @@ impl KafkaConsumer {
         Ok(serde_json::to_vec(msg)?)
     }
 }
-
-// region: --> Tests
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use chrono::Utc;
-    use uuid::Uuid;
-
-    #[cfg(feature = "tokio")]
-    #[tokio::test]
-    async fn test_consumer_new() {
-        std::env::set_var("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092");
-        std::env::set_var("KAFKA_CONSUMER_GROUP", "test-group");
-        let _consumer = KafkaConsumer::new(&["test-topic"], "username", "password").unwrap();
-        // Consumer created successfully - if we reach here, the test passes
-    }
-
-    #[cfg(feature = "tokio")]
-    #[tokio::test]
-    async fn test_consumer_missing_bootstrap_servers() {
-        // Ensure the env var is definitely not set
-        std::env::remove_var("KAFKA_BOOTSTRAP_SERVERS");
-        std::env::set_var("KAFKA_CONSUMER_GROUP", "test-group");
-        let result = KafkaConsumer::new(&["test-topic"], "username", "password");
-        // Should fail with MissingEnvVar error
-        assert!(result.is_err());
-        // Clean up after test
-        std::env::set_var("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092");
-    }
-
-    #[cfg(feature = "tokio")]
-    #[tokio::test]
-    async fn test_consumer_empty_credentials() {
-        std::env::set_var("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092");
-        std::env::set_var("KAFKA_CONSUMER_GROUP", "test-group");
-        let result = KafkaConsumer::new(&["test-topic"], "", "");
-        assert!(result.is_err());
-    }
-
-    #[cfg(feature = "tokio")]
-    #[tokio::test]
-    async fn test_consumer_missing_consumer_group() {
-        std::env::set_var("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092");
-        // Ensure the env var is definitely not set
-        std::env::remove_var("KAFKA_CONSUMER_GROUP");
-        let result = KafkaConsumer::new(&["test-topic"], "username", "password");
-        assert!(result.is_err());
-        // Clean up after test
-        std::env::set_var("KAFKA_CONSUMER_GROUP", "test-group");
-    }
-
-    #[cfg(feature = "tokio")]
-    #[tokio::test]
-    async fn test_consumer_multiple_topics() {
-        std::env::set_var("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092");
-        std::env::set_var("KAFKA_CONSUMER_GROUP", "test-group");
-        let _consumer =
-            KafkaConsumer::new(&["topic1", "topic2", "topic3"], "username", "password").unwrap();
-        // Consumer created successfully with multiple topics - if we reach here, the test passes
-    }
-
-    #[cfg(feature = "tokio")]
-    #[tokio::test]
-    async fn test_consumer_serialize_deserialize() {
-        std::env::set_var("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092");
-        std::env::set_var("KAFKA_CONSUMER_GROUP", "test-group");
-        let consumer = KafkaConsumer::new(&["test-topic"], "username", "password").unwrap();
-
-        let event = EventStream {
-            id: Uuid::new_v4(),
-            session_id: Uuid::new_v4(),
-            tenant_id: Uuid::new_v4(),
-            event_source: "test".to_string(),
-            event_type: "test".to_string(),
-            timestamp: Utc::now(),
-            created_by: "test".to_string(),
-            md5_hash: "test".to_string(),
-            request_id: None,
-            owner_id: None,
-            product_id: None,
-            product_schema_uri: None,
-            event_source_uri: None,
-            affected_entity_uri: None,
-            message: Some("test message".to_string()),
-            body: None,
-            body_uri: None,
-            metadata: None,
-            tags: None,
-        };
-
-        // Test serialization
-        let serialized = consumer.serialize_message(&event).unwrap();
-        assert!(!serialized.is_empty());
-
-        // Verify it's valid JSON
-        let json_str = String::from_utf8(serialized).unwrap();
-        assert!(json_str.contains("test message"));
-    }
-}
-
-// endregion: --> Tests

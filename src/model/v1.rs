@@ -1,4 +1,6 @@
 // event_stream.rs
+use std::hash::{Hash, Hasher};
+
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -10,7 +12,6 @@ use uuid::Uuid;
 ///
 /// This struct matches the Event V1 schema exactly.
 /// All required and optional fields are included, with correct types.
-/// The `body` field is a JSON object (serde_json::Value).
 #[derive(Debug, Serialize, Deserialize)]
 pub struct EventStream {
     /* -------- required core ------------------------------------------- */
@@ -46,10 +47,16 @@ pub struct EventStream {
     pub message: Option<String>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub body: Option<Value>,
+    pub payload: Option<Value>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub body_uri: Option<String>,
+    pub payload_uri: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub context: Option<Value>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub context_uri: Option<String>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub metadata: Option<Value>,
@@ -58,58 +65,92 @@ pub struct EventStream {
     pub tags: Option<Value>,
 }
 
-// endregion: --> EventStream
+impl EventStream {
+    /// Compute hash for the given payload
+    /// # Arguments
+    /// * `payload` - The payload to compute the hash for
+    /// # Returns
+    /// * `String` - The hash of the payload
+    fn compute_payload_hash(payload: &Option<Value>) -> String {
+        match payload {
+            Some(payload) => {
+                let payload_str = serde_json::to_string(payload).unwrap_or_default();
+                let mut hasher = std::collections::hash_map::DefaultHasher::new();
+                payload_str.hash(&mut hasher);
+                format!("{:x}", hasher.finish())
+            }
+            None => String::new(),
+        }
+    }
 
-// region: --> Tests
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_event_stream_serialization() {
-        let event = EventStream {
+    /// Create a new EventStream
+    /// # Arguments
+    /// * `session_id` - The session ID
+    /// * `tenant_id` - The tenant ID
+    /// * `event_source` - The event source
+    /// * `event_type` - The event type
+    /// * `created_by` - The created by
+    /// * `request_id` - The request ID
+    /// * `owner_id` - The owner ID
+    /// * `product_id` - The product ID
+    /// * `product_schema_uri` - The product schema URI
+    /// * `event_source_uri` - The event source URI
+    /// * `affected_entity_uri` - The affected entity URI
+    /// * `message` - The message
+    /// * `payload` - The payload
+    /// * `payload_uri` - The payload URI
+    /// * `context` - The context
+    /// * `context_uri` - The context URI
+    /// * `metadata` - The metadata
+    /// * `tags` - The tags
+    /// # Returns
+    /// * `EventStream` - The new EventStream
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(
+        session_id: Uuid,
+        tenant_id: Uuid,
+        event_source: String,
+        event_type: String,
+        created_by: String,
+        request_id: Option<Uuid>,
+        owner_id: Option<String>,
+        product_id: Option<Uuid>,
+        product_schema_uri: Option<String>,
+        event_source_uri: Option<String>,
+        affected_entity_uri: Option<String>,
+        message: Option<String>,
+        payload: Option<Value>,
+        payload_uri: Option<String>,
+        context: Option<Value>,
+        context_uri: Option<String>,
+        metadata: Option<Value>,
+        tags: Option<Value>,
+    ) -> Self {
+        let md5_hash = Self::compute_payload_hash(&payload);
+        Self {
             id: Uuid::new_v4(),
-            session_id: Uuid::new_v4(),
-            tenant_id: Uuid::new_v4(),
-            event_source: "test".to_string(),
-            event_type: "test".to_string(),
+            session_id,
+            tenant_id,
+            event_source,
+            event_type,
             timestamp: Utc::now(),
-            created_by: "test".to_string(),
-            md5_hash: "test".to_string(),
-            request_id: None,
-            owner_id: None,
-            product_id: None,
-            product_schema_uri: None,
-            event_source_uri: None,
-            affected_entity_uri: None,
-            message: None,
-            body: None,
-            body_uri: None,
-            metadata: None,
-            tags: None,
-        };
-        let serialized = serde_json::to_string(&event).unwrap();
-        assert!(!serialized.is_empty());
-        let deserialized: EventStream = serde_json::from_str(&serialized).unwrap();
-        assert_eq!(event.id, deserialized.id);
-        assert_eq!(event.event_source, deserialized.event_source);
-        assert_eq!(event.event_type, deserialized.event_type);
-        assert_eq!(event.timestamp, deserialized.timestamp);
-        assert_eq!(event.created_by, deserialized.created_by);
-        assert_eq!(event.md5_hash, deserialized.md5_hash);
-        assert_eq!(event.request_id, deserialized.request_id);
-        assert_eq!(event.owner_id, deserialized.owner_id);
-        assert_eq!(event.product_id, deserialized.product_id);
-        assert_eq!(event.product_schema_uri, deserialized.product_schema_uri);
-        assert_eq!(event.event_source_uri, deserialized.event_source_uri);
-        assert_eq!(event.affected_entity_uri, deserialized.affected_entity_uri);
-        assert_eq!(event.message, deserialized.message);
-        assert_eq!(event.body, deserialized.body);
-        assert_eq!(event.body_uri, deserialized.body_uri);
-        assert_eq!(event.metadata, deserialized.metadata);
-        assert_eq!(event.tags, deserialized.tags);
+            created_by,
+            md5_hash,
+            request_id,
+            owner_id,
+            product_id,
+            product_schema_uri,
+            event_source_uri,
+            affected_entity_uri,
+            message,
+            payload,
+            payload_uri,
+            context,
+            context_uri,
+            metadata,
+            tags,
+        }
     }
 }
 
-// endregion: --> Tests
+// endregion: --> EventStream

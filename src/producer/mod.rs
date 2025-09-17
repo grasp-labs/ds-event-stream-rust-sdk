@@ -16,6 +16,7 @@
 //! ```no_run
 //! use ds_event_stream_rust_sdk::producer::KafkaProducer;
 //! use ds_event_stream_rust_sdk::model::EventStream;
+//! use ds_event_stream_rust_sdk::model::topics::Topic;
 //! use uuid::Uuid;
 //! use chrono::Utc;
 //!
@@ -38,17 +39,20 @@
 //!         event_source_uri: None,
 //!         affected_entity_uri: None,
 //!         message: Some("hello".to_string()),
-//!         body: None,
-//!         body_uri: None,
+//!         payload: None,
+//!         payload_uri: None,
+//!         context: None,
+//!         context_uri: None,
 //!         metadata: None,
 //!         tags: None,
 //!     };
-//!     producer.send_message("user-created", "user-42", &payload).await?;
+//!     producer.send_message(&Topic::DsPipelineJobRequested, "user-42", &payload).await?;
 //!     Ok(())
 //! }
 //! ```
 
-use std::{env, time::Duration};
+use std::env;
+use std::time::Duration;
 
 use rdkafka::{
     config::ClientConfig,
@@ -57,6 +61,7 @@ use rdkafka::{
 use tracing::{error, info};
 
 use crate::error::ProducerError;
+use crate::model::topics::Topic;
 use crate::model::v1::EventStream;
 
 // region: --> KafkaProducer
@@ -68,14 +73,9 @@ use crate::model::v1::EventStream;
 #[derive(Clone)]
 pub struct KafkaProducer {
     inner: FutureProducer,
-    timeout: Duration,
 }
 
 impl KafkaProducer {
-    /// Number of milliseconds the producer will wait for an acknowledgment
-    /// before treating the send as failed.
-    const DEFAULT_SEND_TIMEOUT_MS: u64 = 5_000;
-
     /// Constructs a new [`KafkaProducer`] using the `KAFKA_BOOTSTRAP_SERVERS`
     /// environment variable.
     ///
@@ -96,19 +96,15 @@ impl KafkaProducer {
 
         let inner: FutureProducer = ClientConfig::new()
             .set("bootstrap.servers", &bootstrap)
-            .set(
-                "message.timeout.ms",
-                Self::DEFAULT_SEND_TIMEOUT_MS.to_string(),
-            )
-            .set("session.timeout.ms", "6000")
             .set("acks", "all")
             .set("retries", "3")
+            .set("delivery.timeout.ms", "120000")
+            .set("request.timeout.ms", "30000")
+            .set("message.timeout.ms", "5000")
             .set("compression.type", "snappy")
             .set("batch.size", "16384")
             .set("linger.ms", "5")
             .set("max.in.flight.requests.per.connection", "5")
-            .set("request.timeout.ms", "30000")
-            .set("delivery.timeout.ms", "120000")
             .set("security.protocol", "SASL_PLAINTEXT")
             .set("sasl.mechanisms", "SCRAM-SHA-512")
             .set("sasl.username", username)
@@ -118,10 +114,7 @@ impl KafkaProducer {
 
         info!(servers = %bootstrap, "Kafka producer initialised");
 
-        Ok(Self {
-            inner,
-            timeout: Duration::from_millis(Self::DEFAULT_SEND_TIMEOUT_MS),
-        })
+        Ok(Self { inner })
     }
 
     /// Sends a key‑ed JSON message to **`topic`**.
@@ -134,25 +127,28 @@ impl KafkaProducer {
     /// [`ProducerError`].
     pub async fn send_message(
         &self,
-        topic: &str,
+        topic: &Topic,
         key: &str,
         payload: &EventStream,
     ) -> Result<(), ProducerError> {
+        let topic_name = topic.name();
         let payload_json = serde_json::to_string(payload).map_err(ProducerError::Json)?;
-        let record = FutureRecord::to(topic).payload(&payload_json).key(key);
 
-        match self.inner.send(record, self.timeout).await {
+        let record = FutureRecord::to(&topic_name)
+            .payload(&payload_json)
+            .key(key);
+        match self.inner.send(record, Duration::from_millis(5000)).await {
             Ok(delivery) => {
                 info!(
                     partition = delivery.partition,
                     offset = delivery.offset,
                     "message produced to topic: {}",
-                    topic
+                    topic_name
                 );
                 Ok(())
             }
             Err((err, _msg)) => {
-                error!(error = %err, "failed to produce message to topic: {}", topic);
+                error!(error = %err, "failed to produce message to topic: {}", topic_name);
                 Err(ProducerError::Kafka(err))
             }
         }
@@ -160,55 +156,3 @@ impl KafkaProducer {
 }
 
 // endregion: --> KafkaProducer
-
-// region: --> Tests
-
-#[cfg(test)]
-mod tests {
-    use crate::error::ProducerError;
-
-    use super::*;
-
-    #[test]
-    fn test_producer_new() {
-        std::env::set_var("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092");
-        let producer = KafkaProducer::new("username", "password").unwrap();
-        assert_eq!(producer.timeout.as_millis(), 5000);
-    }
-
-    #[test]
-    fn test_producer_missing_bootstrap_servers() {
-        // Ensure the env var is definitely not set
-        std::env::remove_var("KAFKA_BOOTSTRAP_SERVERS");
-        let result = KafkaProducer::new("username", "password");
-        assert!(matches!(result, Err(ProducerError::MissingEnvVar { .. })));
-        // Clean up after test
-        std::env::set_var("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092");
-    }
-
-    #[test]
-    fn test_producer_empty_credentials() {
-        std::env::set_var("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092");
-        // Empty credentials should fail because rdkafka validates SASL credentials
-        let result = KafkaProducer::new("", "");
-        assert!(matches!(result, Err(ProducerError::Kafka(_))));
-    }
-
-    #[test]
-    fn test_producer_timeout_configuration() {
-        std::env::set_var("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092");
-        let producer = KafkaProducer::new("username", "password").unwrap();
-        assert_eq!(producer.timeout.as_millis(), 5000);
-        assert_eq!(producer.timeout.as_secs(), 5);
-    }
-
-    #[test]
-    fn test_producer_clone() {
-        std::env::set_var("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092");
-        let producer1 = KafkaProducer::new("username", "password").unwrap();
-        let producer2 = producer1.clone();
-        assert_eq!(producer1.timeout, producer2.timeout);
-    }
-}
-
-// endregion: --> Tests

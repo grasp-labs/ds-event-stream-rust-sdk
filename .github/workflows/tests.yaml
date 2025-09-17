@@ -19,11 +19,6 @@ jobs:
         with:
           toolchain: ${{ matrix.toolchain }}
       - uses: Swatinem/rust-cache@v2
-
-      # Use vendored SASL2 to avoid system dependency issues
-      - name: Set environment variables
-        run: echo "SASL2_SYS_VENDORED=1" >> $GITHUB_ENV
-
       - name: Build
         run: cargo build --verbose
       - name: Test

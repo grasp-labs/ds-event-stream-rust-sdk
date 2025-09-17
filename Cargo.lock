@@ -117,6 +117,7 @@ dependencies = [
  "chrono",
  "dotenv",
  "rdkafka",
+ "sasl2-sys",
  "serde",
  "serde_json",
  "serde_path_to_error",

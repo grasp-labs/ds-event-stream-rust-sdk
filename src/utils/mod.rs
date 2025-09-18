@@ -10,88 +10,131 @@
 //! ```no_run
 //! use ds_event_stream_rust_sdk::utils::{list_topics, get_topic};
 //!
-//! let topic = get_topic("bootstrap_servers", "username", "password", "topic_name");
-//! let topics = list_topics("bootstrap_servers", "username", "password");
+//! let topic = get_topic("username", "password", "topic_name");
+//! let topics = list_topics("username", "password");
 //! ```
+use std::env;
+
 use rdkafka::admin::AdminClient;
 use rdkafka::client::DefaultClientContext;
 use rdkafka::config::ClientConfig;
-
 use tracing::debug;
 
-// region: --> Utils
+use crate::error::AdminError;
 
-/// Get metadata for a specific topic.
+// region: --> helpers
+
+/// Create an admin client.
 ///
 /// # Arguments
 ///
-/// * `bootstrap_servers` - The bootstrap servers for the DS Event Stream.
+/// * `username` - The username for the DS Event Stream.
+/// * `password` - The password for the DS Event Stream.
+///
+/// # Returns
+///
+/// * `AdminClient<DefaultClientContext>` - The admin client.
+///
+/// # Errors
+///
+/// * [`AdminError::Kafka`] - If the Kafka client fails to create.
+/// * [`AdminError::MissingEnvVar`] - If the environment variable is not set.
+///
+fn create_admin_client(username: &str, password: &str) -> Result<AdminClient<DefaultClientContext>, AdminError> {
+    let bootstrap_servers = env::var("KAFKA_BOOTSTRAP_SERVERS").map_err(|_| AdminError::MissingEnvVar {
+        var_name: "KAFKA_BOOTSTRAP_SERVERS".to_string(),
+    })?;
+    ClientConfig::new()
+        .set("bootstrap.servers", bootstrap_servers)
+        .set("session.timeout.ms", "6000")
+        .set("request.timeout.ms", "30000")
+        .set("connections.max.idle.ms", "540000")
+        .set("metadata.max.age.ms", "300000")
+        .set("security.protocol", "SASL_PLAINTEXT")
+        .set("sasl.mechanism", "SCRAM-SHA-512")
+        .set("sasl.username", username)
+        .set("sasl.password", password)
+        .create()
+        .map_err(AdminError::Kafka)
+}
+
+// endregion: --> helpers
+
+// region: --> Utils
+
+/// Get the name of a specific topic.
+///
+/// # Arguments
+///
 /// * `username` - The username for the DS Event Stream.
 /// * `password` - The password for the DS Event Stream.
 /// * `topic_name` - The name of the topic to get metadata for.
 ///
 /// # Returns
 ///
-/// * `Option<String>` - The topic name if found, None otherwise.
-pub fn get_topic(bootstrap_servers: &str, username: &str, password: &str, topic_name: &str) -> Option<String> {
+/// * `String` - The topic name if found.
+///
+/// # Errors
+///
+/// * [`AdminError::Kafka`] - If the Kafka client fails to fetch metadata.
+/// * [`AdminError::MissingEnvVar`] - If the environment variable is not set.
+/// * [`AdminError::TopicNotFound`] - If the topic is not found.
+///
+pub fn get_topic(username: &str, password: &str, topic_name: &str) -> Result<String, AdminError> {
     debug!("Getting topic metadata for topic: {}", topic_name);
-    let admin: AdminClient<DefaultClientContext> = ClientConfig::new()
-        .set("bootstrap.servers", bootstrap_servers)
-        .set("session.timeout.ms", "6000")
-        .set("request.timeout.ms", "30000")
-        .set("connections.max.idle.ms", "540000")
-        .set("metadata.max.age.ms", "300000")
-        .set("security.protocol", "SASL_PLAINTEXT")
-        .set("sasl.mechanism", "SCRAM-SHA-512")
-        .set("sasl.username", username)
-        .set("sasl.password", password)
-        .create()
-        .expect("Failed to create admin client");
-
+    let admin: AdminClient<DefaultClientContext> = create_admin_client(username, password)?;
     let metadata = admin
         .inner()
         .fetch_metadata(Some(topic_name), std::time::Duration::from_secs(10))
-        .expect("Failed to fetch metadata");
+        .map_err(AdminError::Kafka)?;
 
-    metadata
+    let result = metadata
         .topics()
         .iter()
         .find(|topic| topic.name() == topic_name)
-        .map(|topic| topic.name().to_string())
+        .map(|topic| topic.name().to_string());
+
+    match result {
+        Some(topic_name) => Ok(topic_name),
+        None => Err(AdminError::TopicNotFound {
+            topic_name: topic_name.to_string(),
+            client_id: username.to_string(),
+        }),
+    }
 }
 
-/// Get the topics for the DS Event Stream.
+/// List the topics for the DS Event Stream.
 ///
 /// # Arguments
 ///
-/// * `bootstrap_servers` - The bootstrap servers for the DS Event Stream.
 /// * `username` - The username for the DS Event Stream.
 /// * `password` - The password for the DS Event Stream.
 ///
 /// # Returns
 ///
 /// * `Vec<String>` - The topic names for the DS Event Stream.
-pub fn list_topics(bootstrap_servers: &str, username: &str, password: &str) -> Vec<String> {
+///
+/// # Errors
+///
+/// * [`AdminError::Kafka`] - If the Kafka client fails to fetch metadata.
+/// * [`AdminError::MissingEnvVar`] - If the environment variable is not set.
+///
+pub fn list_topics(username: &str, password: &str) -> Result<Vec<String>, AdminError> {
     debug!("Getting topics for the DS Event Stream");
-    let admin: AdminClient<DefaultClientContext> = ClientConfig::new()
-        .set("bootstrap.servers", bootstrap_servers)
-        .set("session.timeout.ms", "6000")
-        .set("request.timeout.ms", "30000")
-        .set("connections.max.idle.ms", "540000")
-        .set("metadata.max.age.ms", "300000")
-        .set("security.protocol", "SASL_PLAINTEXT")
-        .set("sasl.mechanism", "SCRAM-SHA-512")
-        .set("sasl.username", username)
-        .set("sasl.password", password)
-        .create()
-        .expect("Failed to create admin client");
-
+    let admin: AdminClient<DefaultClientContext> = create_admin_client(username, password)?;
     let metadata = admin
         .inner()
         .fetch_metadata(None, std::time::Duration::from_secs(10))
-        .expect("Failed to fetch metadata");
+        .map_err(AdminError::Kafka)?;
 
-    metadata.topics().iter().map(|topic| topic.name().to_string()).collect()
+    let topics: Vec<String> = metadata.topics().iter().map(|topic| topic.name().to_string()).collect();
+    if topics.is_empty() {
+        return Err(AdminError::TopicsNotFound {
+            client_id: username.to_string(),
+        });
+    }
+
+    Ok(topics)
 }
 
 // endregion: --> Utils

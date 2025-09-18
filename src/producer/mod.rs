@@ -7,7 +7,7 @@
 //! configuration when needed.
 //!
 //! Features
-//! * Lazy, fallible construction via [`KafkaProducer::new`].
+//! * Lazy, fallible construction via [`KafkaProducer::default`].
 //! * Reads the bootstrap servers from the `KAFKA_BOOTSTRAP_SERVERS` env var.
 //! * Emits structured [`tracing`] spans for each send operation.
 //! * Transparently maps errors into your project's [`ProducerError`] enum.
@@ -22,7 +22,7 @@
 //!
 //! #[tokio::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//!     let producer = KafkaProducer::new("username", "password")?;
+//!     let producer = KafkaProducer::default("username", "password")?;
 //!     let payload = EventStream {
 //!         id: Uuid::new_v4(),
 //!         session_id: Uuid::new_v4(),
@@ -46,7 +46,7 @@
 //!         metadata: None,
 //!         tags: None,
 //!     };
-//!     producer.send_message(&Topic::DsPipelineJobRequested, "user-42", &payload).await?;
+//!     producer.send_message(&Topic::DsPipelineJobRequested, "user-42", &payload, None).await?;
 //!     Ok(())
 //! }
 //! ```
@@ -76,19 +76,42 @@ pub struct KafkaProducer {
 }
 
 impl KafkaProducer {
-    /// Constructs a new [`KafkaProducer`] using the `KAFKA_BOOTSTRAP_SERVERS`
-    /// environment variable.
+    /// Explicit configuration.
     ///
     /// # Arguments
     ///
     /// * `username` - The username to use for authentication
     /// * `password` - The password to use for authentication
     ///
+    /// # Returns
+    ///
+    /// * `Result<Self, ProducerError>` - The result of the operation
+    ///
     /// # Errors
-    /// * [`ProducerError::MissingEnvVar`]   if the env var is not set.
     /// * [`ProducerError::Kafka`]            if the underlying `rdkafka`
-    ///   producer fails to initialise (rare — usually wrong config).
-    pub fn new(username: &str, password: &str) -> Result<Self, ProducerError> {
+    ///
+    pub fn new(config: ClientConfig) -> Result<Self, ProducerError> {
+        let inner: FutureProducer = config.create().map_err(ProducerError::Kafka)?;
+        Ok(Self { inner })
+    }
+
+    /// Default configuration.
+    ///
+    /// # Arguments
+    ///
+    /// * `username` - The username to use for authentication
+    /// * `password` - The password to use for authentication
+    ///
+    /// # Returns
+    ///
+    /// * `Result<Self, ProducerError>` - The result of the operation
+    ///
+    /// # Errors
+    ///
+    /// * [`ProducerError::MissingEnvVar`]   if the env var is not set.
+    /// * [`ProducerError::Kafka`]           if the underlying `rdkafka`
+    ///
+    pub fn default(username: &str, password: &str) -> Result<Self, ProducerError> {
         let bootstrap = env::var("KAFKA_BOOTSTRAP_SERVERS").map_err(|_| ProducerError::MissingEnvVar {
             var_name: "KAFKA_BOOTSTRAP_SERVERS".to_string(),
         })?;
@@ -112,24 +135,32 @@ impl KafkaProducer {
             .map_err(ProducerError::Kafka)?;
 
         info!(servers = %bootstrap, "Kafka producer initialised");
-
         Ok(Self { inner })
     }
 
     /// Sends a key‑ed JSON message to **`topic`**.
     ///
-    /// * `T` must implement [`serde::Serialize`] and [`serde::de::DeserializeOwned`].
+    /// * `payload` must be an [`EventStream`] object that implements [`serde::Serialize`].
     /// * `key` is used for partitioning; choose a deterministic key for *exactly
     ///   once‑per‑key* semantics.
+    /// * `queue_timeout` is optional; defaults to 5000ms if not provided.
     ///
     /// The function is instrumented with [`tracing`]; any error bubbles up as
     /// [`ProducerError`].
-    pub async fn send_message(&self, topic: &Topic, key: &str, payload: &EventStream) -> Result<(), ProducerError> {
+    pub async fn send_message(
+        &self,
+        topic: &Topic,
+        key: &str,
+        payload: &EventStream,
+        queue_timeout: Option<Duration>,
+    ) -> Result<(), ProducerError> {
         let topic_name = topic.name();
         let payload_json = serde_json::to_string(payload).map_err(ProducerError::Json)?;
 
         let record = FutureRecord::to(&topic_name).payload(&payload_json).key(key);
-        match self.inner.send(record, Duration::from_millis(5000)).await {
+        let timeout = queue_timeout.unwrap_or(Duration::from_millis(5000));
+
+        match self.inner.send(record, timeout).await {
             Ok(delivery) => {
                 info!(
                     partition = delivery.partition,

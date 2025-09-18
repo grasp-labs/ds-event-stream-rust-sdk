@@ -45,11 +45,11 @@
 //!     );
 //!
 //!     // Send event
-//!     let producer = KafkaProducer::new("username", "password")?;
-//!     producer.send_message(&Topic::IdpIdentityUserCreated, "user-123", &event).await?;
+//!     let producer = KafkaProducer::default("username", "password")?;
+//!     producer.send_message(&Topic::IdpIdentityUserCreated, "user-123", &event, None).await?;
 //!
 //!     // Consume events
-//!     let consumer = KafkaConsumer::new(&[Topic::IdpIdentityUserCreated], "username", "password")?;
+//!     let consumer = KafkaConsumer::default(&[Topic::IdpIdentityUserCreated], "group-id", "username", "password")?;
 //!     let mut stream = consumer.stream();
 //!
 //!     while let Some(result) = stream.next().await {

@@ -1,0 +1,63 @@
+name: Deploy Documentation
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libsasl2-dev libssl-dev pkg-config
+
+      - name: Build documentation
+        run: |
+          cargo doc --no-deps --document-private-items --all-features
+          # Create a simple index.html that redirects to the main documentation
+          cat > target/doc/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html>
+          <head>
+              <meta charset="utf-8">
+              <title>DS Event Stream Rust SDK</title>
+              <meta http-equiv="refresh" content="0; url=ds_event_stream_rust_sdk/index.html">
+          </head>
+          <body>
+              <p>Redirecting to <a href="ds_event_stream_rust_sdk/index.html">DS Event Stream Rust SDK Documentation</a>...</p>
+          </body>
+          </html>
+          EOF
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: target/doc
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

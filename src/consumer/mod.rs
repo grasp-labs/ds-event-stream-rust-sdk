@@ -21,7 +21,7 @@
 //!
 //! #[tokio::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//!     let consumer = KafkaConsumer::new(&[Topic::DsPipelineJobRequested], "username", "password")?;
+//!     let consumer = KafkaConsumer::default(&[Topic::DsPipelineJobRequested], "group-id", "username", "password")?;
 //!     let mut stream = consumer.stream();
 //!
 //!     while let Some(result) = stream.next().await {
@@ -87,10 +87,10 @@ pub struct TracingContext;
 impl ClientContext for TracingContext {}
 impl ConsumerContext for TracingContext {
     fn pre_rebalance<'a>(&self, _c: &BaseConsumer<TracingContext>, r: &Rebalance<'a>) {
-        info!(?r, "pre‑rebalance");
+        debug!(?r, "pre‑rebalance");
     }
     fn post_rebalance<'a>(&self, _c: &BaseConsumer<TracingContext>, r: &Rebalance<'a>) {
-        info!(?r, "post‑rebalance");
+        debug!(?r, "post‑rebalance");
     }
     fn commit_callback(&self, res: rdkafka::error::KafkaResult<()>, offs: &rdkafka::TopicPartitionList) {
         match res {
@@ -125,22 +125,41 @@ impl KafkaConsumer {
     /// # Arguments
     ///
     /// * `topics` - The topics to subscribe to
+    /// * `config` - The consumer configuration
+    ///
+    /// # Returns
+    ///
+    /// * `Result<Self, ConsumerError>` - The result of the operation
+    pub fn new(topics: &[Topic], config: ClientConfig) -> Result<Self, ConsumerError> {
+        let inner: StreamConsumer<_> = config.create_with_context(TracingContext)?;
+
+        let topic_names: Vec<String> = topics.iter().map(|t| t.name()).collect();
+        let topic_refs: Vec<&str> = topic_names.iter().map(|s| s.as_str()).collect();
+
+        inner.subscribe(&topic_refs)?;
+
+        info!(topics = ?topic_names, "Kafka consumer initialised");
+        Ok(Self { inner })
+    }
+
+    /// Default configuration.
+    ///
+    /// # Arguments
+    ///
+    /// * `topics` - The topics to subscribe to
+    /// * `group_id` - The group id to use for the consumer
     /// * `username` - The username to use for authentication
     /// * `password` - The password to use for authentication
     ///
     /// # Returns
     ///
     /// * `Result<Self, ConsumerError>` - The result of the operation
-    pub fn new(topics: &[Topic], username: &str, password: &str) -> Result<Self, ConsumerError> {
+    pub fn default(topics: &[Topic], group_id: &str, username: &str, password: &str) -> Result<Self, ConsumerError> {
         let brokers = env::var("KAFKA_BOOTSTRAP_SERVERS").map_err(|_| ConsumerError::MissingEnvVar {
             var_name: "KAFKA_BOOTSTRAP_SERVERS".to_string(),
         })?;
-        let group = env::var("KAFKA_CONSUMER_GROUP").map_err(|_| ConsumerError::MissingEnvVar {
-            var_name: "KAFKA_CONSUMER_GROUP".to_string(),
-        })?;
-        let context = TracingContext;
         let inner: StreamConsumer<_> = ClientConfig::new()
-            .set("group.id", &group)
+            .set("group.id", group_id)
             .set("bootstrap.servers", &brokers)
             .set("session.timeout.ms", "6000")
             .set("enable.partition.eof", "false")
@@ -155,11 +174,13 @@ impl KafkaConsumer {
             .set("sasl.username", username)
             .set("sasl.password", password)
             .set_log_level(RDKafkaLogLevel::Info)
-            .create_with_context(context)?;
+            .create_with_context(TracingContext)?;
 
         let topic_names: Vec<String> = topics.iter().map(|t| t.name()).collect();
         let topic_refs: Vec<&str> = topic_names.iter().map(|s| s.as_str()).collect();
+
         inner.subscribe(&topic_refs)?;
+
         info!(topics = ?topic_names, "Kafka consumer initialised");
         Ok(Self { inner })
     }

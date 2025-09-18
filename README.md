@@ -40,7 +40,7 @@ use uuid::Uuid;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let producer = KafkaProducer::new("username", "password")?;
+    let producer = KafkaProducer::default("username", "password")?;
     let event = EventStream::new(
         Uuid::new_v4(), // session_id
         Uuid::new_v4(), // tenant_id
@@ -61,7 +61,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         None, // metadata
         None, // tags
     );
-    producer.send_message("user-created", "user-42", &event).await?;
+    producer.send_message("user-created", "user-42", &event, None).await?;
     info!("Event sent to Kafka");
     Ok(())
 }
@@ -77,7 +77,7 @@ use tracing::{error, info};
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Initialize consumer
-    let consumer = KafkaConsumer::new(&["user-created", "user-updated"], "username", "password")?;
+    let consumer = KafkaConsumer::default(&["user-created", "user-updated"], "username", "password")?;
     let mut stream = consumer.stream();
 
     // Process events

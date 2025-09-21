@@ -53,93 +53,93 @@ fn test_event_stream_serialization() {
 #[test]
 fn test_topic_names() {
     // IDP Identity User Events
-    assert_eq!(Topic::IdpIdentityUserCreated.name(), "idp.identity..user.created.v1");
-    assert_eq!(Topic::IdpIdentityUserUpdated.name(), "idp.identity..user.updated.v1");
-    assert_eq!(Topic::IdpIdentityUserDeleted.name(), "idp.identity..user.deleted.v1");
-    assert_eq!(Topic::IdpIdentityUserAuthenticated.name(), "idp.identity..user.authenticated.v1");
+    assert_eq!(Topic::IdpIdentityUserCreated.to_string(), "idp.identity..user.created.v1");
+    assert_eq!(Topic::IdpIdentityUserUpdated.to_string(), "idp.identity..user.updated.v1");
+    assert_eq!(Topic::IdpIdentityUserDeleted.to_string(), "idp.identity..user.deleted.v1");
+    assert_eq!(Topic::IdpIdentityUserAuthenticated.to_string(), "idp.identity..user.authenticated.v1");
 
     // IDP Identity Tenant Events
-    assert_eq!(Topic::IdpIdentityTenantCreated.name(), "idp.identity..tenant.created.v1");
-    assert_eq!(Topic::IdpIdentityTenantUpdated.name(), "idp.identity..tenant.updated.v1");
-    assert_eq!(Topic::IdpIdentityTenantDeleted.name(), "idp.identity..tenant.deleted.v1");
+    assert_eq!(Topic::IdpIdentityTenantCreated.to_string(), "idp.identity..tenant.created.v1");
+    assert_eq!(Topic::IdpIdentityTenantUpdated.to_string(), "idp.identity..tenant.updated.v1");
+    assert_eq!(Topic::IdpIdentityTenantDeleted.to_string(), "idp.identity..tenant.deleted.v1");
 
     // DS Pipeline Job Events
-    assert_eq!(Topic::DsPipelineJobRequested.name(), "ds.pipeline..job.requested.v1");
-    assert_eq!(Topic::DsPipelineJobStarted.name(), "ds.pipeline..job.started.v1");
-    assert_eq!(Topic::DsPipelineJobCompleted.name(), "ds.pipeline..job.completed.v1");
-    assert_eq!(Topic::DsPipelineJobFailed.name(), "ds.pipeline..job.failed.v1");
+    assert_eq!(Topic::DsPipelineJobRequested.to_string(), "ds.pipeline..job.requested.v1");
+    assert_eq!(Topic::DsPipelineJobStarted.to_string(), "ds.pipeline..job.started.v1");
+    assert_eq!(Topic::DsPipelineJobCompleted.to_string(), "ds.pipeline..job.completed.v1");
+    assert_eq!(Topic::DsPipelineJobFailed.to_string(), "ds.pipeline..job.failed.v1");
 
     // DS Pipeline Injection Task Events
-    assert_eq!(Topic::DsPipelineInjectionTaskCompleted.name(), "ds.pipeline.injection.task.completed.v1");
-    assert_eq!(Topic::DsPipelineInjectionTaskFailed.name(), "ds.pipeline.injection.task.failed.v1");
-    assert_eq!(Topic::DsPipelineInjectionMetricCreated.name(), "ds.pipeline.injection.metric.created.v1");
+    assert_eq!(Topic::DsPipelineInjectionTaskCompleted.to_string(), "ds.pipeline.injection.task.completed.v1");
+    assert_eq!(Topic::DsPipelineInjectionTaskFailed.to_string(), "ds.pipeline.injection.task.failed.v1");
+    assert_eq!(Topic::DsPipelineInjectionMetricCreated.to_string(), "ds.pipeline.injection.metric.created.v1");
 
     // DS Pipeline Transform Task Events
-    assert_eq!(Topic::DsPipelineTransformTaskCompleted.name(), "ds.pipeline.transform.task.completed.v1");
-    assert_eq!(Topic::DsPipelineTransformTaskFailed.name(), "ds.pipeline.transform.task.failed.v1");
-    assert_eq!(Topic::DsPipelineTransformMetricCreated.name(), "ds.pipeline.transform.metric.created.v1");
+    assert_eq!(Topic::DsPipelineTransformTaskCompleted.to_string(), "ds.pipeline.transform.task.completed.v1");
+    assert_eq!(Topic::DsPipelineTransformTaskFailed.to_string(), "ds.pipeline.transform.task.failed.v1");
+    assert_eq!(Topic::DsPipelineTransformMetricCreated.to_string(), "ds.pipeline.transform.metric.created.v1");
 
     // DS Pipeline Migrator Task Events
-    assert_eq!(Topic::DsPipelineMigratorTaskCompleted.name(), "ds.pipeline.migrator.task.completed.v1");
-    assert_eq!(Topic::DsPipelineMigratorTaskFailed.name(), "ds.pipeline.migrator.task.failed.v1");
-    assert_eq!(Topic::DsPipelineMigratorMetricCreated.name(), "ds.pipeline.migrator.metric.created.v1");
+    assert_eq!(Topic::DsPipelineMigratorTaskCompleted.to_string(), "ds.pipeline.migrator.task.completed.v1");
+    assert_eq!(Topic::DsPipelineMigratorTaskFailed.to_string(), "ds.pipeline.migrator.task.failed.v1");
+    assert_eq!(Topic::DsPipelineMigratorMetricCreated.to_string(), "ds.pipeline.migrator.metric.created.v1");
 
     // DS Pipeline Synchronizer Task Events
-    assert_eq!(Topic::DsPipelineSynchronizerTaskRequested.name(), "ds.pipeline.synchronizer.task.requested.v1");
-    assert_eq!(Topic::DsPipelineSynchronizerTaskCompleted.name(), "ds.pipeline.synchronizer.task.completed.v1");
-    assert_eq!(Topic::DsPipelineSynchronizerTaskFailed.name(), "ds.pipeline.synchronizer.task.failed.v1");
-    assert_eq!(Topic::DsPipelineSynchronizerMetricCreated.name(), "ds.pipeline.synchronizer.metric.created.v1");
+    assert_eq!(Topic::DsPipelineSynchronizerTaskRequested.to_string(), "ds.pipeline.synchronizer.task.requested.v1");
+    assert_eq!(Topic::DsPipelineSynchronizerTaskCompleted.to_string(), "ds.pipeline.synchronizer.task.completed.v1");
+    assert_eq!(Topic::DsPipelineSynchronizerTaskFailed.to_string(), "ds.pipeline.synchronizer.task.failed.v1");
+    assert_eq!(Topic::DsPipelineSynchronizerMetricCreated.to_string(), "ds.pipeline.synchronizer.metric.created.v1");
 
     // DS Pipeline Synchronizer Job Events
-    assert_eq!(Topic::DsPipelineSynchronizerJobRequested.name(), "ds.pipeline.synchronizer.job.requested.v1");
-    assert_eq!(Topic::DsPipelineSynchronizerJobCompleted.name(), "ds.pipeline.synchronizer.job.completed.v1");
-    assert_eq!(Topic::DsPipelineSynchronizerJobFailed.name(), "ds.pipeline.synchronizer.job.failed.v1");
-    assert_eq!(Topic::DsPipelineSynchronizerJobMetricCreated.name(), "ds.pipeline.synchronizer.metric.created.v1");
+    assert_eq!(Topic::DsPipelineSynchronizerJobRequested.to_string(), "ds.pipeline.synchronizer.job.requested.v1");
+    assert_eq!(Topic::DsPipelineSynchronizerJobCompleted.to_string(), "ds.pipeline.synchronizer.job.completed.v1");
+    assert_eq!(Topic::DsPipelineSynchronizerJobFailed.to_string(), "ds.pipeline.synchronizer.job.failed.v1");
+    assert_eq!(Topic::DsPipelineSynchronizerMetricCreated.to_string(), "ds.pipeline.synchronizer.metric.created.v1");
 
     // DS Pipeline Clone Task Events
-    assert_eq!(Topic::DsPipelineCloneTaskRequested.name(), "ds.pipeline.clone.task.requested.v1");
-    assert_eq!(Topic::DsPipelineCloneTaskCompleted.name(), "ds.pipeline.clone.task.completed.v1");
-    assert_eq!(Topic::DsPipelineCloneTaskFailed.name(), "ds.pipeline.clone.task.failed.v1");
-    assert_eq!(Topic::DsPipelineCloneMetricCreated.name(), "ds.pipeline.clone.metric.created.v1");
+    assert_eq!(Topic::DsPipelineCloneTaskRequested.to_string(), "ds.pipeline.clone.task.requested.v1");
+    assert_eq!(Topic::DsPipelineCloneTaskCompleted.to_string(), "ds.pipeline.clone.task.completed.v1");
+    assert_eq!(Topic::DsPipelineCloneTaskFailed.to_string(), "ds.pipeline.clone.task.failed.v1");
+    assert_eq!(Topic::DsPipelineCloneMetricCreated.to_string(), "ds.pipeline.clone.metric.created.v1");
 
     // DS Workflow Pipeline Job Events
-    assert_eq!(Topic::DsWorkflowPipelineJobRequested.name(), "ds.workflow.pipeline.job.requested.v1");
-    assert_eq!(Topic::DsWorkflowPipelineJobQueued.name(), "ds.workflow.pipeline.job.queued.v1");
-    assert_eq!(Topic::DsWorkflowPipelineJobStarted.name(), "ds.workflow.pipeline.job.started.v1");
-    assert_eq!(Topic::DsWorkflowPipelineJobCompleted.name(), "ds.workflow.pipeline.job.completed.v1");
-    assert_eq!(Topic::DsWorkflowPipelineJobFailed.name(), "ds.workflow.pipeline.job.failed.v1");
+    assert_eq!(Topic::DsWorkflowPipelineJobRequested.to_string(), "ds.workflow.pipeline.job.requested.v1");
+    assert_eq!(Topic::DsWorkflowPipelineJobQueued.to_string(), "ds.workflow.pipeline.job.queued.v1");
+    assert_eq!(Topic::DsWorkflowPipelineJobStarted.to_string(), "ds.workflow.pipeline.job.started.v1");
+    assert_eq!(Topic::DsWorkflowPipelineJobCompleted.to_string(), "ds.workflow.pipeline.job.completed.v1");
+    assert_eq!(Topic::DsWorkflowPipelineJobFailed.to_string(), "ds.workflow.pipeline.job.failed.v1");
 
     // DS Workflow Pipeline Task Events
-    assert_eq!(Topic::DsWorkflowPipelineTaskStarted.name(), "ds.workflow.pipeline.task.started.v1");
-    assert_eq!(Topic::DsWorkflowPipelineTaskCompleted.name(), "ds.workflow.pipeline.task.completed.v1");
-    assert_eq!(Topic::DsWorkflowPipelineTaskFailed.name(), "ds.workflow.pipeline.task.failed.v1");
+    assert_eq!(Topic::DsWorkflowPipelineTaskStarted.to_string(), "ds.workflow.pipeline.task.started.v1");
+    assert_eq!(Topic::DsWorkflowPipelineTaskCompleted.to_string(), "ds.workflow.pipeline.task.completed.v1");
+    assert_eq!(Topic::DsWorkflowPipelineTaskFailed.to_string(), "ds.workflow.pipeline.task.failed.v1");
 
     // DS Workflow Pipeline Events
-    assert_eq!(Topic::DsWorkflowPipelineCreated.name(), "ds.workflow..pipeline.created.v1");
-    assert_eq!(Topic::DsWorkflowPipelineUpdated.name(), "ds.workflow..pipeline.updated.v1");
-    assert_eq!(Topic::DsWorkflowPipelineDeleted.name(), "ds.workflow..pipeline.deleted.v1");
+    assert_eq!(Topic::DsWorkflowPipelineCreated.to_string(), "ds.workflow..pipeline.created.v1");
+    assert_eq!(Topic::DsWorkflowPipelineUpdated.to_string(), "ds.workflow..pipeline.updated.v1");
+    assert_eq!(Topic::DsWorkflowPipelineDeleted.to_string(), "ds.workflow..pipeline.deleted.v1");
 
     // DS Workflow Dataset Events
-    assert_eq!(Topic::DsWorkflowDatasetCreated.name(), "ds.workflow..dataset.created.v1");
-    assert_eq!(Topic::DsWorkflowDatasetUpdated.name(), "ds.workflow..dataset.updated.v1");
-    assert_eq!(Topic::DsWorkflowDatasetDeleted.name(), "ds.workflow..dataset.deleted.v1");
+    assert_eq!(Topic::DsWorkflowDatasetCreated.to_string(), "ds.workflow..dataset.created.v1");
+    assert_eq!(Topic::DsWorkflowDatasetUpdated.to_string(), "ds.workflow..dataset.updated.v1");
+    assert_eq!(Topic::DsWorkflowDatasetDeleted.to_string(), "ds.workflow..dataset.deleted.v1");
 
     // DS Workflow Linked Service Events
-    assert_eq!(Topic::DsWorkflowLinkedServiceCreated.name(), "ds.workflow..linked-service.created.v1");
-    assert_eq!(Topic::DsWorkflowLinkedServiceUpdated.name(), "ds.workflow..linked-service.updated.v1");
-    assert_eq!(Topic::DsWorkflowLinkedServiceDeleted.name(), "ds.workflow..linked-service.deleted.v1");
+    assert_eq!(Topic::DsWorkflowLinkedServiceCreated.to_string(), "ds.workflow..linked-service.created.v1");
+    assert_eq!(Topic::DsWorkflowLinkedServiceUpdated.to_string(), "ds.workflow..linked-service.updated.v1");
+    assert_eq!(Topic::DsWorkflowLinkedServiceDeleted.to_string(), "ds.workflow..linked-service.deleted.v1");
 
     // DS Core Provision Job Events
-    assert_eq!(Topic::DsCoreProvisionJobRequested.name(), "ds.core.provision.job.requested.v1");
-    assert_eq!(Topic::DsCoreProvisionJobCompleted.name(), "ds.core.provision.job.completed.v1");
-    assert_eq!(Topic::DsCoreProvisionJobFailed.name(), "ds.core.provision.job.failed.v1");
+    assert_eq!(Topic::DsCoreProvisionJobRequested.to_string(), "ds.core.provision.job.requested.v1");
+    assert_eq!(Topic::DsCoreProvisionJobCompleted.to_string(), "ds.core.provision.job.completed.v1");
+    assert_eq!(Topic::DsCoreProvisionJobFailed.to_string(), "ds.core.provision.job.failed.v1");
 
     // DS Core Config Events
-    assert_eq!(Topic::DsCoreConfigInfoUpdated.name(), "ds.core.config.info.updated.v1");
-    assert_eq!(Topic::DsCoreConfigStatusUpdated.name(), "ds.core.config.status.updated.v1");
+    assert_eq!(Topic::DsCoreConfigInfoUpdated.to_string(), "ds.core.config.info.updated.v1");
+    assert_eq!(Topic::DsCoreConfigStatusUpdated.to_string(), "ds.core.config.status.updated.v1");
 
     // DS Core Billing Events
-    assert_eq!(Topic::DsCoreBillingUsageCreated.name(), "ds.core.billing.usage.created.v1");
+    assert_eq!(Topic::DsCoreBillingUsageCreated.to_string(), "ds.core.billing.usage.created.v1");
 }
 
 #[test]

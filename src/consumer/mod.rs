@@ -13,8 +13,8 @@
 //!
 //! ### Example
 //! ```no_run
-//! use ds_event_stream_rust_sdk::consumer::KafkaConsumer;
-//! use ds_event_stream_rust_sdk::model::topics::Topic;
+//! use ds_event_stream_rs_sdk::consumer::KafkaConsumer;
+//! use ds_event_stream_rs_sdk::model::topics::Topic;
 //! use tokio_stream::StreamExt;
 //! use tracing::{info, error};
 //! use rdkafka::message::Message;
@@ -73,7 +73,7 @@ use crate::model::EventStream;
 /// # Examples
 ///
 /// ```no_run
-/// use ds_event_stream_rust_sdk::consumer::TracingContext;
+/// use ds_event_stream_rs_sdk::consumer::TracingContext;
 /// ```
 ///
 /// # Panics

@@ -8,7 +8,7 @@
 //!
 //! ### Example
 //! ```
-//! use ds_event_stream_rust_sdk::model::topics::Topic;
+//! use ds_event_stream_rs_sdk::model::topics::Topic;
 //!
 //! let topic = Topic::DsPipelineJobRequested.name();
 //! assert_eq!(topic, "ds.pipeline..job.requested.v1");

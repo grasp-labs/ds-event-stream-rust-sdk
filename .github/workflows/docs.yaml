@@ -38,10 +38,10 @@ jobs:
           <head>
               <meta charset="utf-8">
               <title>DS Event Stream Rust SDK</title>
-              <meta http-equiv="refresh" content="0; url=ds_event_stream_rust_sdk/index.html">
+              <meta http-equiv="refresh" content="0; url=ds_event_stream_rs_sdk/index.html">
           </head>
           <body>
-              <p>Redirecting to <a href="ds_event_stream_rust_sdk/index.html">DS Event Stream Rust SDK Documentation</a>...</p>
+              <p>Redirecting to <a href="ds_event_stream_rs_sdk/index.html">DS Event Stream Rust SDK Documentation</a>...</p>
           </body>
           </html>
           EOF

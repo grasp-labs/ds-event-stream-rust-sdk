@@ -133,12 +133,10 @@ impl KafkaConsumer {
     pub fn new(topics: &[Topic], config: ClientConfig) -> Result<Self, ConsumerError> {
         let inner: StreamConsumer<_> = config.create_with_context(TracingContext)?;
 
-        let topic_names: Vec<String> = topics.iter().map(|t| t.name()).collect();
-        let topic_refs: Vec<&str> = topic_names.iter().map(|s| s.as_str()).collect();
-
+        let topic_refs: Vec<&str> = topics.iter().map(|t| t.as_ref()).collect();
         inner.subscribe(&topic_refs)?;
 
-        info!(topics = ?topic_names, "Kafka consumer initialised");
+        info!(topics = ?topic_refs, "Kafka consumer initialised");
         Ok(Self { inner })
     }
 
@@ -176,12 +174,10 @@ impl KafkaConsumer {
             .set_log_level(RDKafkaLogLevel::Info)
             .create_with_context(TracingContext)?;
 
-        let topic_names: Vec<String> = topics.iter().map(|t| t.name()).collect();
-        let topic_refs: Vec<&str> = topic_names.iter().map(|s| s.as_str()).collect();
-
+        let topic_refs: Vec<&str> = topics.iter().map(|t| t.as_ref()).collect();
         inner.subscribe(&topic_refs)?;
 
-        info!(topics = ?topic_names, "Kafka consumer initialised");
+        info!(topics = ?topic_refs, "Kafka consumer initialised");
         Ok(Self { inner })
     }
 

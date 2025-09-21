@@ -21,6 +21,7 @@ tracing = "0.1"
 serde = { version = "1.0.224", features = ["derive"] }
 serde_json = "1.0"
 serde_path_to_error = "0.1"
+strum = { version = "0.27", features = ["derive"] }
 
 rdkafka = { version = "0.38.0", features = ["cmake-build", "sasl", "tokio"] }
 tokio-stream = { version = "0.1.17" }

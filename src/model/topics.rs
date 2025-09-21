@@ -10,9 +10,13 @@
 //! ```
 //! use ds_event_stream_rs_sdk::model::topics::Topic;
 //!
-//! let topic = Topic::DsPipelineJobRequested.name();
-//! assert_eq!(topic, "ds.pipeline..job.requested.v1");
+//! let topic = Topic::DsPipelineJobRequested;
+//! assert_eq!(topic.to_string(), "ds.pipeline..job.requested.v1");
 //! ```
+
+use strum::{AsRefStr, Display, EnumString};
+
+// region: --> Topic
 
 ///
 /// This enum contains all the topics for the DS Event Stream.
@@ -65,188 +69,150 @@
 /// * `DsWorkflowDatasetCreated` - The event when a workflow dataset is created.
 /// * `DsWorkflowDatasetUpdated` - The event when a workflow dataset is updated.
 /// * `DsWorkflowDatasetDeleted` - The event when a workflow dataset is deleted.
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Display, AsRefStr, EnumString)]
 pub enum Topic {
     // IDP Identity User Events
+    #[strum(serialize = "idp.identity..user.created.v1")]
     IdpIdentityUserCreated,
+    #[strum(serialize = "idp.identity..user.updated.v1")]
     IdpIdentityUserUpdated,
+    #[strum(serialize = "idp.identity..user.deleted.v1")]
     IdpIdentityUserDeleted,
+    #[strum(serialize = "idp.identity..user.authenticated.v1")]
     IdpIdentityUserAuthenticated,
 
     // IDP Identity Tenant Events
+    #[strum(serialize = "idp.identity..tenant.created.v1")]
     IdpIdentityTenantCreated,
+    #[strum(serialize = "idp.identity..tenant.updated.v1")]
     IdpIdentityTenantUpdated,
+    #[strum(serialize = "idp.identity..tenant.deleted.v1")]
     IdpIdentityTenantDeleted,
 
     // DS Pipeline Job Events
+    #[strum(serialize = "ds.pipeline..job.requested.v1")]
     DsPipelineJobRequested,
+    #[strum(serialize = "ds.pipeline..job.started.v1")]
     DsPipelineJobStarted,
+    #[strum(serialize = "ds.pipeline..job.completed.v1")]
     DsPipelineJobCompleted,
+    #[strum(serialize = "ds.pipeline..job.failed.v1")]
     DsPipelineJobFailed,
 
     // DS Pipeline Injection Task Events
+    #[strum(serialize = "ds.pipeline.injection.task.completed.v1")]
     DsPipelineInjectionTaskCompleted,
+    #[strum(serialize = "ds.pipeline.injection.task.failed.v1")]
     DsPipelineInjectionTaskFailed,
+    #[strum(serialize = "ds.pipeline.injection.metric.created.v1")]
     DsPipelineInjectionMetricCreated,
 
     // DS Pipeline Transform Task Events
+    #[strum(serialize = "ds.pipeline.transform.task.completed.v1")]
     DsPipelineTransformTaskCompleted,
+    #[strum(serialize = "ds.pipeline.transform.task.failed.v1")]
     DsPipelineTransformTaskFailed,
+    #[strum(serialize = "ds.pipeline.transform.metric.created.v1")]
     DsPipelineTransformMetricCreated,
 
     // DS Pipeline Migrator Task Events
+    #[strum(serialize = "ds.pipeline.migrator.task.completed.v1")]
     DsPipelineMigratorTaskCompleted,
+    #[strum(serialize = "ds.pipeline.migrator.task.failed.v1")]
     DsPipelineMigratorTaskFailed,
+    #[strum(serialize = "ds.pipeline.migrator.metric.created.v1")]
     DsPipelineMigratorMetricCreated,
 
     // DS Pipeline Synchronizer Task Events
+    #[strum(serialize = "ds.pipeline.synchronizer.task.requested.v1")]
     DsPipelineSynchronizerTaskRequested,
+    #[strum(serialize = "ds.pipeline.synchronizer.task.completed.v1")]
     DsPipelineSynchronizerTaskCompleted,
+    #[strum(serialize = "ds.pipeline.synchronizer.task.failed.v1")]
     DsPipelineSynchronizerTaskFailed,
+    #[strum(serialize = "ds.pipeline.synchronizer.metric.created.v1")]
     DsPipelineSynchronizerMetricCreated,
 
     // DS Pipeline Synchronizer Job Events
+    #[strum(serialize = "ds.pipeline.synchronizer.job.requested.v1")]
     DsPipelineSynchronizerJobRequested,
+    #[strum(serialize = "ds.pipeline.synchronizer.job.completed.v1")]
     DsPipelineSynchronizerJobCompleted,
+    #[strum(serialize = "ds.pipeline.synchronizer.job.failed.v1")]
     DsPipelineSynchronizerJobFailed,
-    DsPipelineSynchronizerJobMetricCreated,
 
     // DS Pipeline Clone Task Events
+    #[strum(serialize = "ds.pipeline.clone.task.requested.v1")]
     DsPipelineCloneTaskRequested,
+    #[strum(serialize = "ds.pipeline.clone.task.completed.v1")]
     DsPipelineCloneTaskCompleted,
+    #[strum(serialize = "ds.pipeline.clone.task.failed.v1")]
     DsPipelineCloneTaskFailed,
+    #[strum(serialize = "ds.pipeline.clone.metric.created.v1")]
     DsPipelineCloneMetricCreated,
 
     // DS Workflow Pipeline Job Events
+    #[strum(serialize = "ds.workflow.pipeline.job.requested.v1")]
     DsWorkflowPipelineJobRequested,
+    #[strum(serialize = "ds.workflow.pipeline.job.queued.v1")]
     DsWorkflowPipelineJobQueued,
+    #[strum(serialize = "ds.workflow.pipeline.job.started.v1")]
     DsWorkflowPipelineJobStarted,
+    #[strum(serialize = "ds.workflow.pipeline.job.completed.v1")]
     DsWorkflowPipelineJobCompleted,
+    #[strum(serialize = "ds.workflow.pipeline.job.failed.v1")]
     DsWorkflowPipelineJobFailed,
 
     // DS Workflow Pipeline Task Events
+    #[strum(serialize = "ds.workflow.pipeline.task.started.v1")]
     DsWorkflowPipelineTaskStarted,
+    #[strum(serialize = "ds.workflow.pipeline.task.completed.v1")]
     DsWorkflowPipelineTaskCompleted,
+    #[strum(serialize = "ds.workflow.pipeline.task.failed.v1")]
     DsWorkflowPipelineTaskFailed,
 
     // DS Workflow Pipeline Events
+    #[strum(serialize = "ds.workflow..pipeline.created.v1")]
     DsWorkflowPipelineCreated,
+    #[strum(serialize = "ds.workflow..pipeline.updated.v1")]
     DsWorkflowPipelineUpdated,
+    #[strum(serialize = "ds.workflow..pipeline.deleted.v1")]
     DsWorkflowPipelineDeleted,
 
     // DS Workflow Dataset Events
+    #[strum(serialize = "ds.workflow..dataset.created.v1")]
     DsWorkflowDatasetCreated,
+    #[strum(serialize = "ds.workflow..dataset.updated.v1")]
     DsWorkflowDatasetUpdated,
+    #[strum(serialize = "ds.workflow..dataset.deleted.v1")]
     DsWorkflowDatasetDeleted,
 
     // DS Workflow Linked Service Events
+    #[strum(serialize = "ds.workflow..linked-service.created.v1")]
     DsWorkflowLinkedServiceCreated,
+    #[strum(serialize = "ds.workflow..linked-service.updated.v1")]
     DsWorkflowLinkedServiceUpdated,
+    #[strum(serialize = "ds.workflow..linked-service.deleted.v1")]
     DsWorkflowLinkedServiceDeleted,
 
     // DS Core Provision Job Events
+    #[strum(serialize = "ds.core.provision.job.requested.v1")]
     DsCoreProvisionJobRequested,
+    #[strum(serialize = "ds.core.provision.job.completed.v1")]
     DsCoreProvisionJobCompleted,
+    #[strum(serialize = "ds.core.provision.job.failed.v1")]
     DsCoreProvisionJobFailed,
 
     // DS Core Config Events
+    #[strum(serialize = "ds.core.config.info.updated.v1")]
     DsCoreConfigInfoUpdated,
+    #[strum(serialize = "ds.core.config.status.updated.v1")]
     DsCoreConfigStatusUpdated,
 
     // DS Core Billing Events
+    #[strum(serialize = "ds.core.billing.usage.created.v1")]
     DsCoreBillingUsageCreated,
 }
 
-impl Topic {
-    pub fn name(&self) -> String {
-        match self {
-            // IDP Identity User Events
-            Topic::IdpIdentityUserCreated => "idp.identity..user.created.v1".to_string(),
-            Topic::IdpIdentityUserUpdated => "idp.identity..user.updated.v1".to_string(),
-            Topic::IdpIdentityUserDeleted => "idp.identity..user.deleted.v1".to_string(),
-            Topic::IdpIdentityUserAuthenticated => "idp.identity..user.authenticated.v1".to_string(),
-
-            // IDP Identity Tenant Events
-            Topic::IdpIdentityTenantCreated => "idp.identity..tenant.created.v1".to_string(),
-            Topic::IdpIdentityTenantUpdated => "idp.identity..tenant.updated.v1".to_string(),
-            Topic::IdpIdentityTenantDeleted => "idp.identity..tenant.deleted.v1".to_string(),
-
-            // DS Pipeline Job Events
-            Topic::DsPipelineJobRequested => "ds.pipeline..job.requested.v1".to_string(),
-            Topic::DsPipelineJobStarted => "ds.pipeline..job.started.v1".to_string(),
-            Topic::DsPipelineJobCompleted => "ds.pipeline..job.completed.v1".to_string(),
-            Topic::DsPipelineJobFailed => "ds.pipeline..job.failed.v1".to_string(),
-
-            // DS Pipeline Injection Task Events
-            Topic::DsPipelineInjectionTaskCompleted => "ds.pipeline.injection.task.completed.v1".to_string(),
-            Topic::DsPipelineInjectionTaskFailed => "ds.pipeline.injection.task.failed.v1".to_string(),
-            Topic::DsPipelineInjectionMetricCreated => "ds.pipeline.injection.metric.created.v1".to_string(),
-
-            // DS Pipeline Transform Task Events
-            Topic::DsPipelineTransformTaskCompleted => "ds.pipeline.transform.task.completed.v1".to_string(),
-            Topic::DsPipelineTransformTaskFailed => "ds.pipeline.transform.task.failed.v1".to_string(),
-            Topic::DsPipelineTransformMetricCreated => "ds.pipeline.transform.metric.created.v1".to_string(),
-
-            // DS Pipeline Migrator Task Events
-            Topic::DsPipelineMigratorTaskCompleted => "ds.pipeline.migrator.task.completed.v1".to_string(),
-            Topic::DsPipelineMigratorTaskFailed => "ds.pipeline.migrator.task.failed.v1".to_string(),
-            Topic::DsPipelineMigratorMetricCreated => "ds.pipeline.migrator.metric.created.v1".to_string(),
-
-            // DS Pipeline Synchronizer Task Events
-            Topic::DsPipelineSynchronizerTaskRequested => "ds.pipeline.synchronizer.task.requested.v1".to_string(),
-            Topic::DsPipelineSynchronizerTaskCompleted => "ds.pipeline.synchronizer.task.completed.v1".to_string(),
-            Topic::DsPipelineSynchronizerTaskFailed => "ds.pipeline.synchronizer.task.failed.v1".to_string(),
-            Topic::DsPipelineSynchronizerMetricCreated => "ds.pipeline.synchronizer.metric.created.v1".to_string(),
-
-            // DS Pipeline Synchronizer Job Events
-            Topic::DsPipelineSynchronizerJobRequested => "ds.pipeline.synchronizer.job.requested.v1".to_string(),
-            Topic::DsPipelineSynchronizerJobCompleted => "ds.pipeline.synchronizer.job.completed.v1".to_string(),
-            Topic::DsPipelineSynchronizerJobFailed => "ds.pipeline.synchronizer.job.failed.v1".to_string(),
-            Topic::DsPipelineSynchronizerJobMetricCreated => "ds.pipeline.synchronizer.metric.created.v1".to_string(),
-
-            // DS Pipeline Clone Task Events
-            Topic::DsPipelineCloneTaskRequested => "ds.pipeline.clone.task.requested.v1".to_string(),
-            Topic::DsPipelineCloneTaskCompleted => "ds.pipeline.clone.task.completed.v1".to_string(),
-            Topic::DsPipelineCloneTaskFailed => "ds.pipeline.clone.task.failed.v1".to_string(),
-            Topic::DsPipelineCloneMetricCreated => "ds.pipeline.clone.metric.created.v1".to_string(),
-
-            // DS Workflow Pipeline Job Events
-            Topic::DsWorkflowPipelineJobRequested => "ds.workflow.pipeline.job.requested.v1".to_string(),
-            Topic::DsWorkflowPipelineJobQueued => "ds.workflow.pipeline.job.queued.v1".to_string(),
-            Topic::DsWorkflowPipelineJobStarted => "ds.workflow.pipeline.job.started.v1".to_string(),
-            Topic::DsWorkflowPipelineJobCompleted => "ds.workflow.pipeline.job.completed.v1".to_string(),
-            Topic::DsWorkflowPipelineJobFailed => "ds.workflow.pipeline.job.failed.v1".to_string(),
-
-            // DS Workflow Pipeline Task Events
-            Topic::DsWorkflowPipelineTaskStarted => "ds.workflow.pipeline.task.started.v1".to_string(),
-            Topic::DsWorkflowPipelineTaskCompleted => "ds.workflow.pipeline.task.completed.v1".to_string(),
-            Topic::DsWorkflowPipelineTaskFailed => "ds.workflow.pipeline.task.failed.v1".to_string(),
-
-            // DS Workflow Pipeline Events
-            Topic::DsWorkflowPipelineCreated => "ds.workflow..pipeline.created.v1".to_string(),
-            Topic::DsWorkflowPipelineUpdated => "ds.workflow..pipeline.updated.v1".to_string(),
-            Topic::DsWorkflowPipelineDeleted => "ds.workflow..pipeline.deleted.v1".to_string(),
-
-            // DS Workflow Dataset Events
-            Topic::DsWorkflowDatasetCreated => "ds.workflow..dataset.created.v1".to_string(),
-            Topic::DsWorkflowDatasetUpdated => "ds.workflow..dataset.updated.v1".to_string(),
-            Topic::DsWorkflowDatasetDeleted => "ds.workflow..dataset.deleted.v1".to_string(),
-
-            // DS Workflow Linked Service Events
-            Topic::DsWorkflowLinkedServiceCreated => "ds.workflow..linked-service.created.v1".to_string(),
-            Topic::DsWorkflowLinkedServiceUpdated => "ds.workflow..linked-service.updated.v1".to_string(),
-            Topic::DsWorkflowLinkedServiceDeleted => "ds.workflow..linked-service.deleted.v1".to_string(),
-
-            // DS Core Provision Job Events
-            Topic::DsCoreProvisionJobRequested => "ds.core.provision.job.requested.v1".to_string(),
-            Topic::DsCoreProvisionJobCompleted => "ds.core.provision.job.completed.v1".to_string(),
-            Topic::DsCoreProvisionJobFailed => "ds.core.provision.job.failed.v1".to_string(),
-
-            // DS Core Config Events
-            Topic::DsCoreConfigInfoUpdated => "ds.core.config.info.updated.v1".to_string(),
-            Topic::DsCoreConfigStatusUpdated => "ds.core.config.status.updated.v1".to_string(),
-
-            // DS Core Billing Events
-            Topic::DsCoreBillingUsageCreated => "ds.core.billing.usage.created.v1".to_string(),
-        }
-    }
-}
+// endregion: --> Topic

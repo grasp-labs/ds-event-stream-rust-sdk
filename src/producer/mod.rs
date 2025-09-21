@@ -154,7 +154,7 @@ impl KafkaProducer {
         payload: &EventStream,
         queue_timeout: Option<Duration>,
     ) -> Result<(), ProducerError> {
-        let topic_name = topic.name();
+        let topic_name = topic.to_string();
         let payload_json = serde_json::to_string(payload).map_err(ProducerError::Json)?;
 
         let record = FutureRecord::to(&topic_name).payload(&payload_json).key(key);

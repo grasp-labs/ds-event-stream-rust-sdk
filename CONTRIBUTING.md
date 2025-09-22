@@ -8,14 +8,14 @@ Thank you for your interest in contributing to the DS Event Stream Rust SDK! Thi
 2. **Clone your fork** locally:
 
    ```bash
-   git clone https://github.com/your-username/ds-event-stream-rust-sdk.git
-   cd ds-event-stream-rust-sdk
+   git clone https://github.com/your-username/ds-event-stream-rs-sdk.git
+   cd ds-event-stream-rs-sdk
    ```
 
 3. **Add the upstream remote**:
 
    ```bash
-   git remote add upstream https://github.com/grasp-labs/ds-event-stream-rust-sdk.git
+   git remote add upstream https://github.com/grasp-labs/ds-event-stream-rs-sdk.git
    ```
 
 ## Development Setup

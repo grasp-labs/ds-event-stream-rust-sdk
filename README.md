@@ -1,6 +1,6 @@
 # DS Event Stream Rust SDK
 
-[![Crates.io version](https://img.shields.io/crates/v/ds-event-stream-rust-sdk.svg)](https://crates.io/crates/ds-event-stream-rust-sdk)
+[![Crates.io version](https://img.shields.io/crates/v/ds-event-stream-rs-sdk.svg)](https://crates.io/crates/ds-event-stream-rs-sdk)
 [![License: MIT OR Apache-2.0](https://img.shields.io/badge/License-MIT%20OR%20Apache--2.0-blue.svg)](https://opensource.org/licenses/MIT)
 [![Rust](https://img.shields.io/badge/rust-1.76%2B-blue.svg)](https://www.rust-lang.org)
 
@@ -20,13 +20,13 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-ds-event-stream-rust-sdk = "0.1.0"
+ds-event-stream-rs-sdk = "0.1.0"
 ```
 
 Or use cargo add:
 
 ```sh
-cargo add ds-event-stream-rust-sdk
+cargo add ds-event-stream-rs-sdk
 ```
 
 ## Quick Start
@@ -34,7 +34,7 @@ cargo add ds-event-stream-rust-sdk
 ### Producer Example
 
 ```rust
-use ds_event_stream_rust_sdk::{KafkaProducer, EventStream};
+use ds_event_stream_rs_sdk::{KafkaProducer, EventStream};
 use tracing::info;
 use uuid::Uuid;
 
@@ -70,7 +70,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 ### Consumer Example
 
 ```rust
-use ds_event_stream_rust_sdk::KafkaConsumer;
+use ds_event_stream_rs_sdk::KafkaConsumer;
 use tokio_stream::StreamExt;
 use tracing::{error, info};
 

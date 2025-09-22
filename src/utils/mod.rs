@@ -8,7 +8,7 @@
 //!
 //! ### Example
 //! ```no_run
-//! use ds_event_stream_rust_sdk::utils::{list_topics, get_topic};
+//! use ds_event_stream_rs_sdk::utils::{list_topics, get_topic};
 //!
 //! let topic = get_topic("username", "password", "topic_name");
 //! let topics = list_topics("username", "password");

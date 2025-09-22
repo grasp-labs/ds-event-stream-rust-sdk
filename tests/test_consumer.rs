@@ -1,5 +1,5 @@
 use chrono::Utc;
-use ds_event_stream_rust_sdk::model::EventStream;
+use ds_event_stream_rs_sdk::model::EventStream;
 use uuid::Uuid;
 
 #[tokio::test]

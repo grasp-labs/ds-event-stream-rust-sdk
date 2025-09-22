@@ -1,13 +1,13 @@
 [package]
-name = "ds-event-stream-rust-sdk"
+name = "ds-event-stream-rs-sdk"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.76.0"
 description = "A comprehensive Rust SDK for working with the DS Event Stream, providing high-level abstractions for producing and consuming events from Kafka"
 readme = "README.md"
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/grasp-labs/ds-event-stream-rust-sdk"
-documentation = "https://docs.rs/ds-event-stream-rust-sdk"
+repository = "https://github.com/grasp-labs/ds-event-stream-rs-sdk"
+documentation = "https://docs.rs/ds-event-stream-rs-sdk"
 keywords = ["kafka", "event-stream", "sdk", "messaging", "async"]
 categories = ["asynchronous", "network-programming", "web-programming"]
 
@@ -21,6 +21,7 @@ tracing = "0.1"
 serde = { version = "1.0.224", features = ["derive"] }
 serde_json = "1.0"
 serde_path_to_error = "0.1"
+strum = { version = "0.27", features = ["derive"] }
 
 rdkafka = { version = "0.38.0", features = ["cmake-build", "sasl", "tokio"] }
 tokio-stream = { version = "0.1.17" }

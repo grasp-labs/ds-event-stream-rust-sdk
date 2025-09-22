@@ -45,6 +45,6 @@ jobs:
           tag_name: ${{ github.ref_name }}
           release_name: Release ${{ github.ref_name }}
           body: |
-            See the [full changelog](https://github.com/grasp-labs/ds-event-stream-rust-sdk/compare/${{ github.event.before }}...${{ github.sha }}) for details.
+            See the [full changelog](https://github.com/grasp-labs/ds-event-stream-rs-sdk/compare/${{ github.event.before }}...${{ github.sha }}) for details.
           draft: false
           prerelease: false

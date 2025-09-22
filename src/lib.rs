@@ -16,13 +16,13 @@
 //! Add to your `Cargo.toml`:
 //! ```toml
 //! [dependencies]
-//! ds-event-stream-rust-sdk = "0.1.0"
+//! ds-event-stream-rs-sdk = "0.1.0"
 //! ```
 //!
 //! ### Basic Usage
 //!
 //! ```no_run
-//! use ds_event_stream_rust_sdk::{
+//! use ds_event_stream_rs_sdk::{
 //!     model::{EventStream, topics::Topic},
 //!     producer::KafkaProducer,
 //!     consumer::KafkaConsumer,

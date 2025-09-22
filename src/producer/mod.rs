@@ -14,9 +14,9 @@
 //!
 //! ### Example
 //! ```no_run
-//! use ds_event_stream_rust_sdk::producer::KafkaProducer;
-//! use ds_event_stream_rust_sdk::model::EventStream;
-//! use ds_event_stream_rust_sdk::model::topics::Topic;
+//! use ds_event_stream_rs_sdk::producer::KafkaProducer;
+//! use ds_event_stream_rs_sdk::model::EventStream;
+//! use ds_event_stream_rs_sdk::model::topics::Topic;
 //! use uuid::Uuid;
 //! use chrono::Utc;
 //!
@@ -154,7 +154,7 @@ impl KafkaProducer {
         payload: &EventStream,
         queue_timeout: Option<Duration>,
     ) -> Result<(), ProducerError> {
-        let topic_name = topic.name();
+        let topic_name = topic.to_string();
         let payload_json = serde_json::to_string(payload).map_err(ProducerError::Json)?;
 
         let record = FutureRecord::to(&topic_name).payload(&payload_json).key(key);

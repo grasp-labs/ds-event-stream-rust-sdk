@@ -1,4 +1,4 @@
-use ds_event_stream_rust_sdk::utils::{get_topic, list_topics};
+use ds_event_stream_rs_sdk::utils::{get_topic, list_topics};
 
 #[test]
 fn test_get_topic_function_exists() {

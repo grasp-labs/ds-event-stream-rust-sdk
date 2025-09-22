@@ -1,5 +1,5 @@
-use ds_event_stream_rust_sdk::error::ProducerError;
-use ds_event_stream_rust_sdk::producer::KafkaProducer;
+use ds_event_stream_rs_sdk::error::ProducerError;
+use ds_event_stream_rs_sdk::producer::KafkaProducer;
 
 // Note: These tests require environment variables to be set externally
 // Run with: KAFKA_BOOTSTRAP_SERVERS=localhost:9092 cargo test

@@ -13,8 +13,8 @@
 //!
 //! ### Example
 //! ```no_run
-//! use ds_event_stream_rust_sdk::consumer::KafkaConsumer;
-//! use ds_event_stream_rust_sdk::model::topics::Topic;
+//! use ds_event_stream_rs_sdk::consumer::KafkaConsumer;
+//! use ds_event_stream_rs_sdk::model::topics::Topic;
 //! use tokio_stream::StreamExt;
 //! use tracing::{info, error};
 //! use rdkafka::message::Message;
@@ -73,7 +73,7 @@ use crate::model::EventStream;
 /// # Examples
 ///
 /// ```no_run
-/// use ds_event_stream_rust_sdk::consumer::TracingContext;
+/// use ds_event_stream_rs_sdk::consumer::TracingContext;
 /// ```
 ///
 /// # Panics
@@ -133,12 +133,10 @@ impl KafkaConsumer {
     pub fn new(topics: &[Topic], config: ClientConfig) -> Result<Self, ConsumerError> {
         let inner: StreamConsumer<_> = config.create_with_context(TracingContext)?;
 
-        let topic_names: Vec<String> = topics.iter().map(|t| t.name()).collect();
-        let topic_refs: Vec<&str> = topic_names.iter().map(|s| s.as_str()).collect();
-
+        let topic_refs: Vec<&str> = topics.iter().map(|t| t.as_ref()).collect();
         inner.subscribe(&topic_refs)?;
 
-        info!(topics = ?topic_names, "Kafka consumer initialised");
+        info!(topics = ?topic_refs, "Kafka consumer initialised");
         Ok(Self { inner })
     }
 
@@ -176,12 +174,10 @@ impl KafkaConsumer {
             .set_log_level(RDKafkaLogLevel::Info)
             .create_with_context(TracingContext)?;
 
-        let topic_names: Vec<String> = topics.iter().map(|t| t.name()).collect();
-        let topic_refs: Vec<&str> = topic_names.iter().map(|s| s.as_str()).collect();
-
+        let topic_refs: Vec<&str> = topics.iter().map(|t| t.as_ref()).collect();
         inner.subscribe(&topic_refs)?;
 
-        info!(topics = ?topic_names, "Kafka consumer initialised");
+        info!(topics = ?topic_refs, "Kafka consumer initialised");
         Ok(Self { inner })
     }
 

@@ -15,21 +15,29 @@
 //! ```no_run
 //! use ds_event_stream_rs_sdk::consumer::KafkaConsumer;
 //! use ds_event_stream_rs_sdk::model::topics::Topic;
+//! use ds_event_stream_rs_sdk::model::v1::EventStream;
+//! use ds_event_stream_rs_sdk::error::{Result, SDKError};
+//! use ds_event_stream_rs_sdk::utils::{get_bootstrap_servers, Environment, ClientCredentials   };
+//!
 //! use tokio_stream::StreamExt;
 //! use tracing::{info, error};
 //! use rdkafka::message::Message;
 //!
 //! #[tokio::main]
-//! async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//!     let consumer = KafkaConsumer::default(&[Topic::DsPipelineJobRequested], "group-id", "username", "password")?;
+//! async fn main() -> Result<(), SDKError> {
+//!     let bootstrap_servers = get_bootstrap_servers(Environment::Development, false);
+//!     let credentials = ClientCredentials { username: "username".to_string(), password: "password".to_string() };
+//!
+//!     let consumer = KafkaConsumer::default(&bootstrap_servers, &[Topic::DsPipelineJobRequested], "group-id", &credentials)?;
 //!     let mut stream = consumer.stream();
 //!
 //!     while let Some(result) = stream.next().await {
 //!         match result {
 //!             Ok(msg) => {
 //!                 info!("Received message on topic: {}", msg.topic());
-//!                 if let Some(payload) = msg.payload() {
-//!                     info!("Payload: {:?}", std::str::from_utf8(payload)?);
+//!                 match consumer.deserialize_message(&msg) {
+//!                     Ok(event) => info!("Deserialized event: {:?}", event),
+//!                     Err(e) => error!("Failed to deserialize message: {}", e),
 //!                 }
 //!             }
 //!             Err(e) => error!("Kafka error: {}", e),
@@ -38,8 +46,7 @@
 //!     Ok(())
 //! }
 //! ```
-
-use std::env;
+pub mod error;
 
 use rdkafka::{
     client::ClientContext,
@@ -52,9 +59,12 @@ use serde_json::Deserializer;
 use serde_path_to_error::deserialize;
 use tracing::{debug, error, info};
 
-use crate::error::ConsumerError;
+use crate::error::{Result, SDKError};
 use crate::model::topics::Topic;
-use crate::model::EventStream;
+use crate::model::v1::EventStream;
+use crate::utils::ClientCredentials;
+
+use error::ConsumerError;
 
 /* --------------------------------------------------------------------- */
 /* Context                                                               */
@@ -129,12 +139,19 @@ impl KafkaConsumer {
     ///
     /// # Returns
     ///
-    /// * `Result<Self, ConsumerError>` - The result of the operation
-    pub fn new(topics: &[Topic], config: ClientConfig) -> Result<Self, ConsumerError> {
-        let inner: StreamConsumer<_> = config.create_with_context(TracingContext)?;
+    /// * `Result<Self, SDKError>` - The result of the operation
+    ///
+    /// # Errors
+    ///
+    /// * [`SDKError::Consumer`] - If the consumer fails to create.
+    ///
+    pub fn new(topics: &[Topic], config: ClientConfig) -> Result<Self> {
+        let inner: StreamConsumer<_> = config
+            .create_with_context(TracingContext)
+            .map_err(ConsumerError::Kafka)?;
 
         let topic_refs: Vec<&str> = topics.iter().map(|t| t.as_ref()).collect();
-        inner.subscribe(&topic_refs)?;
+        inner.subscribe(&topic_refs).map_err(ConsumerError::Kafka)?;
 
         info!(topics = ?topic_refs, "Kafka consumer initialised");
         Ok(Self { inner })
@@ -146,19 +163,25 @@ impl KafkaConsumer {
     ///
     /// * `topics` - The topics to subscribe to
     /// * `group_id` - The group id to use for the consumer
-    /// * `username` - The username to use for authentication
-    /// * `password` - The password to use for authentication
+    /// * `credentials` - The credentials to use for authentication
     ///
     /// # Returns
     ///
-    /// * `Result<Self, ConsumerError>` - The result of the operation
-    pub fn default(topics: &[Topic], group_id: &str, username: &str, password: &str) -> Result<Self, ConsumerError> {
-        let brokers = env::var("KAFKA_BOOTSTRAP_SERVERS").map_err(|_| ConsumerError::MissingEnvVar {
-            var_name: "KAFKA_BOOTSTRAP_SERVERS".to_string(),
-        })?;
+    /// * `Result<Self, SDKError>` - The result of the operation
+    ///
+    /// # Errors
+    ///
+    /// * [`SDKError::Consumer`] - If the consumer fails to create.
+    ///
+    pub fn default(
+        bootstrap_servers: &str,
+        topics: &[Topic],
+        group_id: &str,
+        credentials: &ClientCredentials,
+    ) -> Result<Self> {
         let inner: StreamConsumer<_> = ClientConfig::new()
             .set("group.id", group_id)
-            .set("bootstrap.servers", &brokers)
+            .set("bootstrap.servers", bootstrap_servers)
             .set("session.timeout.ms", "6000")
             .set("enable.partition.eof", "false")
             .set("heartbeat.interval.ms", "3000")
@@ -169,13 +192,14 @@ impl KafkaConsumer {
             .set("max.partition.fetch.bytes", "1048576")
             .set("security.protocol", "SASL_PLAINTEXT")
             .set("sasl.mechanism", "SCRAM-SHA-512")
-            .set("sasl.username", username)
-            .set("sasl.password", password)
+            .set("sasl.username", credentials.username.clone())
+            .set("sasl.password", credentials.password.clone())
             .set_log_level(RDKafkaLogLevel::Info)
-            .create_with_context(TracingContext)?;
+            .create_with_context(TracingContext)
+            .map_err(ConsumerError::Kafka)?;
 
         let topic_refs: Vec<&str> = topics.iter().map(|t| t.as_ref()).collect();
-        inner.subscribe(&topic_refs)?;
+        inner.subscribe(&topic_refs).map_err(ConsumerError::Kafka)?;
 
         info!(topics = ?topic_refs, "Kafka consumer initialised");
         Ok(Self { inner })
@@ -203,6 +227,8 @@ impl KafkaConsumer {
 
     /// Commits the offset of a message.
     ///
+    /// # Arguments
+    ///
     /// * `msg` - The message to commit
     /// * `mode` - The commit mode
     ///
@@ -222,19 +248,32 @@ impl KafkaConsumer {
     ///
     /// * `T` must implement [`serde::Serialize`] and [`serde::de::DeserializeOwned`].
     ///
+    /// # Arguments
+    ///
+    /// * `msg` - The message to deserialize
+    ///
     /// # Returns
     ///
-    /// * `Result<EventStream, ConsumerError>` - The result of the operation
-    pub fn deserialize_message(&self, msg: &BorrowedMessage<'_>) -> Result<EventStream, ConsumerError> {
+    /// * `Result<EventStream, SDKError>` - The result of the operation
+    ///
+    /// # Errors
+    ///
+    /// * [`SDKError::Consumer`] - If the consumer fails to deserialize the message.
+    ///
+    pub fn deserialize_message(&self, msg: &BorrowedMessage<'_>) -> Result<EventStream> {
         let payload = msg
             .payload()
             .ok_or_else(|| ConsumerError::InvalidPayload("Empty message payload".to_string()))?;
-        let payload_str = std::str::from_utf8(payload)?;
+        let payload_str = std::str::from_utf8(payload).map_err(ConsumerError::Utf8)?;
 
         let de = &mut Deserializer::from_str(payload_str);
         match deserialize::<_, EventStream>(de) {
             Ok(event) => Ok(event),
-            Err(e) => Err(ConsumerError::InvalidPayload(format!("Deserialization error at {}: {}", e.path(), e))),
+            Err(e) => Err(SDKError::Consumer(ConsumerError::InvalidPayload(format!(
+                "Deserialization error at {}: {}",
+                e.path(),
+                e
+            )))),
         }
     }
 
@@ -242,10 +281,19 @@ impl KafkaConsumer {
     ///
     /// * `T` must implement [`serde::Serialize`].
     ///
+    /// # Arguments
+    ///
+    /// * `msg` - The message to serialize
+    ///
     /// # Returns
     ///
-    /// * `Result<Vec<u8>, ConsumerError>` - The result of the operation
-    pub fn serialize_message(&self, msg: &EventStream) -> Result<Vec<u8>, ConsumerError> {
-        Ok(serde_json::to_vec(msg)?)
+    /// * `Result<Vec<u8>, SDKError>` - The result of the operation
+    ///
+    /// # Errors
+    ///
+    /// * [`SDKError::Consumer`] - If the consumer fails to serialize the message.
+    ///
+    pub fn serialize_message(&self, msg: &EventStream) -> Result<Vec<u8>> {
+        Ok(serde_json::to_vec(msg).map_err(ConsumerError::Json)?)
     }
 }

@@ -8,11 +8,14 @@ A Rust SDK for interacting with the DS Event Stream via Kafka. This library prov
 
 ## Features
 
-- **Kafka Producer** - Send events to the DS Event Stream
-- **Kafka Consumer** - Consume events from the DS Event Stream
-- **Event Models** - Pre-defined event structures for DS Event Stream
+- **Kafka Producer** - Send events to the DS Event Stream with structured logging
+- **Kafka Consumer** - Consume events from the DS Event Stream with stream-based processing
+- **Event Models** - Pre-defined event structures for DS Event Stream (EventStream v1)
+- **Topic Management** - Predefined topic constants and utilities
+- **Admin Utilities** - Helper functions for Kafka cluster management
 - **Async Support** - Built on Tokio for high-performance async operations
 - **Error Handling** - Comprehensive error types for robust applications
+- **Environment Support** - Built-in support for Development and Production environments
 
 ## Installation
 
@@ -34,34 +37,48 @@ cargo add ds-event-stream-rs-sdk
 ### Producer Example
 
 ```rust
-use ds_event_stream_rs_sdk::{KafkaProducer, EventStream};
+use ds_event_stream_rs_sdk::producer::KafkaProducer;
+use ds_event_stream_rs_sdk::model::v1::EventStream;
+use ds_event_stream_rs_sdk::model::topics::Topic;
+use ds_event_stream_rs_sdk::utils::{get_bootstrap_servers, Environment, ClientCredentials};
 use tracing::info;
 use uuid::Uuid;
+use chrono::Utc;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let producer = KafkaProducer::default("username", "password")?;
-    let event = EventStream::new(
-        Uuid::new_v4(), // session_id
-        Uuid::new_v4(), // tenant_id
-        "pipeline-service".to_string(), // event_source
-        "pipeline-created".to_string(), // event_type
-        "user-42".to_string(), // created_by
-        None, // request_id
-        None, // owner_id
-        None, // product_id
-        None, // product_schema_uri
-        None, // event_source_uri
-        None, // affected_entity_uri
-        None, // message
-        Some(serde_json::json!({"pipeline_id": "pipeline-123"})), // payload
-        None, // payload_uri
-        None, // context
-        None, // context_uri
-        None, // metadata
-        None, // tags
-    );
-    producer.send_message("user-created", "user-42", &event, None).await?;
+    let bootstrap_servers = get_bootstrap_servers(Environment::Development, false);
+    let credentials = ClientCredentials {
+        username: "username".to_string(),
+        password: "password".to_string()
+    };
+    let producer = KafkaProducer::default(&bootstrap_servers, &credentials)?;
+
+    let event = EventStream {
+        id: Uuid::new_v4(),
+        session_id: Uuid::new_v4(),
+        tenant_id: Uuid::new_v4(),
+        event_source: "pipeline-service".to_string(),
+        event_type: "pipeline-created".to_string(),
+        timestamp: Utc::now(),
+        created_by: "user-42".to_string(),
+        md5_hash: "hash".to_string(),
+        request_id: None,
+        owner_id: None,
+        product_id: None,
+        product_schema_uri: None,
+        event_source_uri: None,
+        affected_entity_uri: None,
+        message: None,
+        payload: Some(serde_json::json!({"pipeline_id": "pipeline-123"})),
+        payload_uri: None,
+        context: None,
+        context_uri: None,
+        metadata: None,
+        tags: None,
+    };
+
+    producer.send_event(&Topic::DsPipelineJobRequested, "user-42", &event, None).await?;
     info!("Event sent to Kafka");
     Ok(())
 }
@@ -70,14 +87,27 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 ### Consumer Example
 
 ```rust
-use ds_event_stream_rs_sdk::KafkaConsumer;
+use ds_event_stream_rs_sdk::consumer::KafkaConsumer;
+use ds_event_stream_rs_sdk::model::topics::Topic;
+use ds_event_stream_rs_sdk::utils::{get_bootstrap_servers, Environment, ClientCredentials};
 use tokio_stream::StreamExt;
+use rdkafka::message::Message;
 use tracing::{error, info};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let bootstrap_servers = get_bootstrap_servers(Environment::Development, false);
+    let credentials = ClientCredentials {
+        username: "username".to_string(),
+        password: "password".to_string()
+    };
     // Initialize consumer
-    let consumer = KafkaConsumer::default(&["user-created", "user-updated"], "username", "password")?;
+    let consumer = KafkaConsumer::default(
+        &bootstrap_servers,
+        &[Topic::DsPipelineJobRequested],
+        "group-id",
+        &credentials
+    )?;
     let mut stream = consumer.stream();
 
     // Process events
@@ -97,12 +127,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-## Environment Variables
+## Configuration
 
-The SDK uses the following environment variables:
+The SDK provides utility functions for getting bootstrap servers for different environments:
 
-- `KAFKA_BOOTSTRAP_SERVERS` - Kafka broker addresses (required)
-- `KAFKA_CONSUMER_GROUP` - Consumer group ID (required for consumers)
+- `get_bootstrap_servers(Environment::Development, false)` - Development external servers
+- `get_bootstrap_servers(Environment::Development, true)` - Development internal servers
+- `get_bootstrap_servers(Environment::Production, false)` - Production external servers
+- `get_bootstrap_servers(Environment::Production, true)` - Production internal servers
+
+Authentication is handled via `ClientCredentials` struct with username and password fields.
 
 ## License
 

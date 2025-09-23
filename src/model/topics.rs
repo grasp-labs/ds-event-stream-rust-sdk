@@ -213,9 +213,6 @@ pub enum Topic {
     // DS Core Billing Events
     #[strum(serialize = "ds.core.billing.usage.created.v1")]
     DsCoreBillingUsageCreated,
-
-    #[strum(serialize = ".*")]
-    DsAllTopics,
 }
 
 // endregion: --> Topic

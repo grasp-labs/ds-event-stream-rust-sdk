@@ -15,13 +15,11 @@
 //! ```no_run
 //! use ds_event_stream_rs_sdk::consumer::KafkaConsumer;
 //! use ds_event_stream_rs_sdk::model::topics::Topic;
-//! use ds_event_stream_rs_sdk::model::v1::EventStream;
 //! use ds_event_stream_rs_sdk::error::{Result, SDKError};
-//! use ds_event_stream_rs_sdk::utils::{get_bootstrap_servers, Environment, ClientCredentials   };
+//! use ds_event_stream_rs_sdk::utils::{get_bootstrap_servers, Environment, ClientCredentials};
 //!
 //! use tokio_stream::StreamExt;
 //! use tracing::{info, error};
-//! use rdkafka::message::Message;
 //!
 //! #[tokio::main]
 //! async fn main() -> Result<(), SDKError> {
@@ -29,18 +27,12 @@
 //!     let credentials = ClientCredentials { username: "username".to_string(), password: "password".to_string() };
 //!
 //!     let consumer = KafkaConsumer::default(&bootstrap_servers, &[Topic::DsPipelineJobRequested], "group-id", &credentials)?;
-//!     let mut stream = consumer.stream();
+//!     let mut event_stream = consumer.event_stream();
 //!
-//!     while let Some(result) = stream.next().await {
-//!         match result {
-//!             Ok(msg) => {
-//!                 info!("Received message on topic: {}", msg.topic());
-//!                 match consumer.deserialize_message(&msg) {
-//!                     Ok(event) => info!("Deserialized event: {:?}", event),
-//!                     Err(e) => error!("Failed to deserialize message: {}", e),
-//!                 }
-//!             }
-//!             Err(e) => error!("Kafka error: {}", e),
+//!     while let Some(next) = event_stream.next().await {
+//!         match next {
+//!             Ok(event) => info!("Received event: {:?}", event),
+//!             Err(err) => error!("Failed to deserialize event: {}", err),
 //!         }
 //!     }
 //!     Ok(())
@@ -57,6 +49,7 @@ use rdkafka::{
 };
 use serde_json::Deserializer;
 use serde_path_to_error::deserialize;
+use tokio_stream::{Stream, StreamExt};
 use tracing::{debug, error, info};
 
 use crate::error::{Result, SDKError};
@@ -216,6 +209,27 @@ impl KafkaConsumer {
         self.inner.stream()
     }
 
+    /// Async stream of deserialized EventStream messages.
+    ///
+    /// This method provides a higher-level API that automatically deserializes
+    /// Kafka messages into `EventStream` objects. This eliminates the need for
+    /// manual deserialization in your application code.
+    ///
+    /// # Returns
+    ///
+    /// * `impl Stream<Item = Result<EventStream, SDKError>> + '_` - The stream of deserialized events
+    ///
+    /// # Errors
+    ///
+    /// * [`SDKError::Consumer`] - If the consumer fails to deserialize the message.
+    ///
+    pub fn event_stream(&self) -> impl Stream<Item = Result<EventStream, SDKError>> + '_ {
+        self.inner.stream().map(|kafka_result| match kafka_result {
+            Ok(msg) => self.deserialize_message(&msg),
+            Err(kafka_error) => Err(SDKError::Consumer(ConsumerError::Kafka(kafka_error))),
+        })
+    }
+
     /// Get the underlying consumer for manual polling.
     ///
     /// # Returns
@@ -275,25 +289,5 @@ impl KafkaConsumer {
                 e
             )))),
         }
-    }
-
-    /// Serializes an `EventStream<T>` into a Kafka message.
-    ///
-    /// * `T` must implement [`serde::Serialize`].
-    ///
-    /// # Arguments
-    ///
-    /// * `msg` - The message to serialize
-    ///
-    /// # Returns
-    ///
-    /// * `Result<Vec<u8>, SDKError>` - The result of the operation
-    ///
-    /// # Errors
-    ///
-    /// * [`SDKError::Consumer`] - If the consumer fails to serialize the message.
-    ///
-    pub fn serialize_message(&self, msg: &EventStream) -> Result<Vec<u8>> {
-        Ok(serde_json::to_vec(msg).map_err(ConsumerError::Json)?)
     }
 }

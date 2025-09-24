@@ -27,13 +27,16 @@
 //!     producer::KafkaProducer,
 //!     consumer::KafkaConsumer,
 //! };
+//! use ds_event_stream_rs_sdk::error::{Result, SDKError};
+//! use ds_event_stream_rs_sdk::utils::{get_bootstrap_servers, Environment, ClientCredentials};
+//!
 //! use uuid::Uuid;
 //! use chrono::Utc;
 //! use tokio_stream::StreamExt;
 //! use rdkafka::message::Message;
 //!
 //! #[tokio::main]
-//! async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! async fn main() -> Result<(), SDKError> {
 //!     // Create an event
 //!     let event = EventStream::new(
 //!         Uuid::new_v4(),
@@ -44,12 +47,13 @@
 //!         None, None, None, None, None, None, None, None, None, None, None, None, None
 //!     );
 //!
-//!     // Send event
-//!     let producer = KafkaProducer::default("username", "password")?;
-//!     producer.send_message(&Topic::IdpIdentityUserCreated, "user-123", &event, None).await?;
+//!     let bootstrap_servers = get_bootstrap_servers(Environment::Development, false);
+//!     let credentials = ClientCredentials { username: "username".to_string(), password: "password".to_string() };
 //!
-//!     // Consume events
-//!     let consumer = KafkaConsumer::default(&[Topic::IdpIdentityUserCreated], "group-id", "username", "password")?;
+//!     let producer = KafkaProducer::default(&bootstrap_servers, &credentials)?;
+//!     producer.send_event(&Topic::IdpIdentityUserCreated, "user-123", &event, None).await?;
+//!
+//!     let consumer = KafkaConsumer::default(&bootstrap_servers, &[Topic::IdpIdentityUserCreated], "group-id", &credentials)?;
 //!     let mut stream = consumer.stream();
 //!
 //!     while let Some(result) = stream.next().await {
@@ -67,16 +71,14 @@
 //!
 //! The SDK uses the following environment variables:
 //!
-//! - `KAFKA_BOOTSTRAP_SERVERS`: Comma-separated list of Kafka brokers
-//! - `KAFKA_USERNAME`: Username for SASL authentication
-//! - `KAFKA_PASSWORD`: Password for SASL authentication
-//!
 //! ## Error Handling
 //!
 //! The SDK provides comprehensive error types:
 //!
-//! - [`error::ProducerError`]: Errors related to message production
-//! - [`error::ConsumerError`]: Errors related to message consumption
+//! - [`error::SDKError`]: Errors related to the SDK
+//! - [`producer::error::ProducerError`]: Errors related to message production
+//! - [`consumer::error::ConsumerError`]: Errors related to message consumption
+//! - [`utils::error::UtilsError`]: Errors related to administrative utilities
 //!
 //! ## Modules
 //!

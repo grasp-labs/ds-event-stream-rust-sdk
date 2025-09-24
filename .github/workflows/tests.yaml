@@ -24,7 +24,7 @@ jobs:
         run: cargo build --verbose
 
       - name: Test
-        run: cargo test --verbose -- --test-threads=1
+        run: cargo test --verbose
 
       - name: Doc build
         run: cargo doc --no-deps

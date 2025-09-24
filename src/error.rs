@@ -1,62 +1,48 @@
-use std::str::Utf8Error;
+//! Error module.
+//!
+//! ## Overview
+//! This module contains the unified error types for the DS Event Stream Rust SDK.
+//! All SDK functions return `Result<T, SDKError>` for consistent error handling.
+//!
+//! ## Error Hierarchy
+//!
+//! - [`SDKError`]: Top-level error enum that unifies all module errors
+//! - [`ProducerError`]: Errors from message production operations
+//! - [`ConsumerError`]: Errors from message consumption operations
+//! - [`UtilsError`]: Errors from administrative utilities
+//!
+
 use thiserror::Error;
 
-// region: --> AdminError
+use crate::consumer::error::ConsumerError;
+use crate::producer::error::ProducerError;
+use crate::utils::error::UtilsError;
 
+/// Unified result type for all SDK operations.
+///
+/// This is equivalent to `Result<T, SDKError>` and provides consistent
+/// error handling across all SDK modules.
+pub type Result<T, E = SDKError> = std::result::Result<T, E>;
+
+// region: --> SDKError
+
+/// Top-level error enum that unifies all SDK module errors.
+///
+/// This enum provides a single error type for all SDK operations,
+/// making error handling consistent and ergonomic for users.
 #[derive(Error, Debug)]
-pub enum AdminError {
-    #[error("Missing environment variable: {var_name}")]
-    MissingEnvVar { var_name: String },
+pub enum SDKError {
+    /// Errors from producer operations (sending messages)
+    #[error("Producer error: {0}")]
+    Producer(#[from] ProducerError),
 
-    #[error("Kafka error: {0}")]
-    Kafka(#[from] rdkafka::error::KafkaError),
+    /// Errors from consumer operations (receiving messages)
+    #[error("Consumer error: {0}")]
+    Consumer(#[from] ConsumerError),
 
-    #[error("Topic not found: {topic_name} for clientId: {client_id}")]
-    TopicNotFound { topic_name: String, client_id: String },
-
-    #[error("No topics found for clientId: {client_id}")]
-    TopicsNotFound { client_id: String },
+    /// Errors from utility operations (admin functions)
+    #[error("Utils error: {0}")]
+    Utils(#[from] UtilsError),
 }
 
-// endregion: --> AdminError
-
-// region: --> ConsumerError
-
-#[derive(Error, Debug)]
-pub enum ConsumerError {
-    #[error("Kafka error: {0}")]
-    Kafka(#[from] rdkafka::error::KafkaError),
-
-    #[error("Missing environment variable: {var_name}")]
-    MissingEnvVar { var_name: String },
-
-    #[error("Invalid payload: {0}")]
-    InvalidPayload(String),
-
-    #[error("Validation error: {0}")]
-    Validation(String),
-
-    #[error("UTF-8 error: {0}")]
-    Utf8(#[from] Utf8Error),
-
-    #[error("JSON error: {0}")]
-    Json(#[from] serde_json::Error),
-}
-
-// endregion: --> ConsumerError
-
-// region: --> ProducerError
-
-#[derive(Error, Debug)]
-pub enum ProducerError {
-    #[error("Kafka error: {0}")]
-    Kafka(#[from] rdkafka::error::KafkaError),
-
-    #[error("Missing environment variable: {var_name}")]
-    MissingEnvVar { var_name: String },
-
-    #[error("JSON error: {0}")]
-    Json(#[from] serde_json::Error),
-}
-
-// endregion: --> ProducerError
+// endregion: --> SDKError

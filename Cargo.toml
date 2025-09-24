@@ -27,5 +27,4 @@ rdkafka = { version = "0.38.0", features = ["cmake-build", "sasl", "tokio"] }
 tokio-stream = { version = "0.1.17" }
 
 [dev-dependencies]
-dotenv = "0.15"
 tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros", "test-util"] }

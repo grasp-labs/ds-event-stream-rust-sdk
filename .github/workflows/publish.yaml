@@ -20,6 +20,11 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
 
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libsasl2-dev libssl-dev pkg-config
+
       - name: Verify version matches tag
         run: |
           TOML_VERSION=$(cargo metadata --no-deps --format-version=1 | jq -r '.packages[0].version')

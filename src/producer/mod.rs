@@ -174,7 +174,7 @@ impl KafkaProducer {
         queue_timeout: Option<Duration>,
     ) -> Result<()> {
         let topic_name = topic.to_string();
-        let payload_json = serde_json::to_string(payload).map_err(ProducerError::Json)?;
+        let payload_json = self.serialize_message(payload)?;
 
         let record = FutureRecord::to(&topic_name).payload(&payload_json).key(key);
         let timeout = queue_timeout.unwrap_or(Duration::from_millis(5000));
@@ -194,6 +194,26 @@ impl KafkaProducer {
                 Err(SDKError::Producer(ProducerError::Kafka(err)))
             }
         }
+    }
+
+    /// Serializes an `EventStream<T>` into a Kafka message.
+    ///
+    /// * `T` must implement [`serde::Serialize`].
+    ///
+    /// # Arguments
+    ///
+    /// * `msg` - The message to serialize
+    ///
+    /// # Returns
+    ///
+    /// * `Result<Vec<u8>, SDKError>` - The result of the operation
+    ///
+    /// # Errors
+    ///
+    /// * [`SDKError::Producer`] - If the producer fails to serialize the message.
+    ///
+    pub fn serialize_message(&self, msg: &EventStream) -> Result<Vec<u8>> {
+        Ok(serde_json::to_vec(msg).map_err(ProducerError::Json)?)
     }
 }
 
